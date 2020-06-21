@@ -190,7 +190,7 @@ export default class Bbhc extends React.Component<IBbhcProps, IBbhcState> {
     }
     sp.web.lists
       .getByTitle("ProviderDetails")
-      .items.add({ Title: 'kjda', LegalName: 'rqwe' })
+      .items.add(formData)
       .then((res) => {
         this.createProvider(this.state.providerName);
       });
