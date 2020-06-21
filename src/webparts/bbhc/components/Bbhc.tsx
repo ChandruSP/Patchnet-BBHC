@@ -18,6 +18,9 @@ import { Label } from "office-ui-fabric-react/lib/Label";
 
 import { getId } from "office-ui-fabric-react/lib/Utilities";
 
+import { PeoplePicker, PrincipalType } from "@pnp/spfx-controls-react/lib/PeoplePicker";
+
+
 import {
   Dropdown,
   DropdownMenuItemType,
@@ -62,6 +65,11 @@ export interface IBbhcState {
   subFolders: IDropdownOption[];
   cols: [];
   rows: [];
+  formData: {
+    Title: string;
+    LegalName: string;
+    Users: any[];
+  }
 }
 
 export default class Bbhc extends React.Component<IBbhcProps, IBbhcState> {
@@ -73,11 +81,25 @@ export default class Bbhc extends React.Component<IBbhcProps, IBbhcState> {
       subFolders: [],
       cols: [],
       rows: [],
+      formData: {
+        Title: '',
+        LegalName: '',
+        Users: []
+      }
     };
   }
   providerNameChange = (event) => {
     this.setState({ providerName: event.target.value });
+    this.inputChangeHandler(event);
   };
+
+  inputChangeHandler(e) {
+    let formData = this.state.formData;
+    formData[e.target.name] = e.target.value;
+    this.setState({
+      formData
+    });
+  }
 
   componentDidMount() {
     var folderPath = "Shared Documents/2020/Chandru";
@@ -153,7 +175,25 @@ export default class Bbhc extends React.Component<IBbhcProps, IBbhcState> {
   }
 
   processInputProvider = () => {
-    this.createProvider(this.state.providerName);
+    var formData = this.state.formData;
+    if (!formData.Title) {
+      alert('Provider name is required');
+      return;
+    }
+    if (!formData.LegalName) {
+      alert('Legal name is required');
+      return;
+    }
+    if (formData.Users.length <= 0) {
+      alert('Select any users');
+      return;
+    }
+    sp.web.lists
+      .getByTitle("ProviderDetails")
+      .items.add({ Title: 'kjda', LegalName: 'rqwe' })
+      .then((res) => {
+        this.createProvider(this.state.providerName);
+      });
   };
 
   cloneFolder = async () => {
@@ -215,18 +255,56 @@ export default class Bbhc extends React.Component<IBbhcProps, IBbhcState> {
     });
   };
 
+  private _getPeoplePickerItems(items: any[]) {
+    var locData = this.state.formData;
+    locData.Users = [];
+    for (let index = 0; index < items.length; index++) {
+      locData.Users.push(items[index].id);
+    }
+    this.setState({ formData: locData });
+  }
+
   public render(): React.ReactElement<IBbhcProps> {
     return (
       <div className={styles.bbhc}>
         <div>
           <h2>Add Provider</h2>
+
           <div>
             <TextField
               label="Provider Name"
               onChange={this.providerNameChange}
               width="200px"
+              name="Title"
+              value={this.state.formData.Title}
             ></TextField>
           </div>
+
+          <div>
+            <TextField
+              label="Legal Name"
+              width="200px"
+              onChange={(e) => this.inputChangeHandler.call(this, e)}
+              value={this.state.formData.LegalName}
+              name="LegalName"
+            ></TextField>
+          </div>
+
+          <div>
+            <PeoplePicker
+              context={this.props.context}
+              titleText="Users"
+              personSelectionLimit={100}
+              groupName={""}
+              showtooltip={true}
+              isRequired={false}
+              disabled={false}
+              selectedItems={this._getPeoplePickerItems.bind(this)}
+              showHiddenInUI={false}
+              principalTypes={[PrincipalType.User]}
+              resolveDelay={1000} />
+          </div>
+
           <div>
             <PrimaryButton onClick={this.processInputProvider}>
               Add a New Provider

@@ -19,7 +19,7 @@ export interface IBbhcWebPartProps {
 
 export default class BbhcWebPart extends BaseClientSideWebPart<
   IBbhcWebPartProps
-> {
+  > {
   public onInit(): Promise<void> {
     return super.onInit().then((_) => {
       sp.setup({
@@ -29,8 +29,11 @@ export default class BbhcWebPart extends BaseClientSideWebPart<
   }
 
   public render(): void {
+    var currentContext = this.context;
+
     const element: React.ReactElement<IBbhcProps> = React.createElement(Bbhc, {
       description: this.properties.description,
+      context: currentContext
     });
 
     ReactDom.render(element, this.domElement);
