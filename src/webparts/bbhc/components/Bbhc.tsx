@@ -10,6 +10,7 @@ import "@pnp/sp/items";
 
 import "@pnp/sp/webs";
 import "@pnp/sp/folders";
+import "@pnp/sp/site-users/web";
 
 import { IItemAddResult } from "@pnp/sp/items";
 
@@ -68,11 +69,17 @@ export interface IBbhcState {
   formData: {
     Title: string;
     LegalName: string;
-    Users: any[];
+    UsersId: {
+      results: any[];
+    }
   }
 }
 
 export default class Bbhc extends React.Component<IBbhcProps, IBbhcState> {
+
+  selUsers = [];
+  allUsers = [];
+
   constructor(prop: IBbhcProps, state: IBbhcState) {
     super(prop);
     this.state = {
@@ -84,7 +91,9 @@ export default class Bbhc extends React.Component<IBbhcProps, IBbhcState> {
       formData: {
         Title: '',
         LegalName: '',
-        Users: []
+        UsersId: {
+          results: []
+        }
       }
     };
   }
@@ -184,17 +193,37 @@ export default class Bbhc extends React.Component<IBbhcProps, IBbhcState> {
       alert('Legal name is required');
       return;
     }
-    if (formData.Users.length <= 0) {
+    if (this.selUsers.length <= 0) {
       alert('Select any users');
       return;
     }
+    this.getUserData(0);
+  }
+
+  getUserData(index) {
+    var that = this;
+    sp.web.siteUsers.getByLoginName(this.selUsers[index].id).get().then((res) => {
+      this.allUsers.push(res.Id);
+      index = index + 1;
+      if (index < that.selUsers.length) {
+        this.getUserData(index);
+      } else {
+        that.addToList();
+      }
+    });
+  }
+
+  addToList() {
+    var formData = this.state.formData;
+    formData.UsersId.results = this.allUsers;
+    this.setState({ formData: formData });
     sp.web.lists
       .getByTitle("ProviderDetails")
       .items.add(formData)
       .then((res) => {
         this.createProvider(this.state.providerName);
       });
-  };
+  }
 
   cloneFolder = async () => {
     await this.getFolder("Shared Documents/2020", this.state.providerName);
@@ -256,12 +285,7 @@ export default class Bbhc extends React.Component<IBbhcProps, IBbhcState> {
   };
 
   private _getPeoplePickerItems(items: any[]) {
-    var locData = this.state.formData;
-    locData.Users = [];
-    for (let index = 0; index < items.length; index++) {
-      locData.Users.push(items[index].id);
-    }
-    this.setState({ formData: locData });
+    this.selUsers = items;
   }
 
   public render(): React.ReactElement<IBbhcProps> {
