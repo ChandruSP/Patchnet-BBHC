@@ -51,11 +51,22 @@ export default class ProviderDocuments extends React.Component<IProviderDocument
   }
 
   getProviderMetaData() {
+    // var that = this;
+    // sp.web.lists
+    //   .getByTitle("ProviderDetails")
+    //   .items.select("Title")
+    //   .filter("Users/EMail eq '" + this.props.currentContext.pageContext.user.email + "'").get().then((res) => {
+    //     if (res.length > 0) {
+    //       that.userName = res[0].Title;
+    //       that.getFolders(res[0].Title);
+    //     }
+    //   });
+
     var that = this;
     sp.web.lists
       .getByTitle("ProviderDetails")
       .items.select("Title")
-      .filter("Users/EMail eq '" + this.props.currentContext.pageContext.user._email + "'").get().then((res) => {
+      .filter("substringof('" + this.props.currentContext.pageContext.user.email.toLowerCase() + "',Users)").get().then((res) => {
         if (res.length > 0) {
           that.userName = res[0].Title;
           that.getFolders(res[0].Title);

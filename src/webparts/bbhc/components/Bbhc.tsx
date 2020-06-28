@@ -18,6 +18,10 @@ import { PrimaryButton } from "@fluentui/react";
 import { Label } from "office-ui-fabric-react/lib/Label";
 
 import { getId } from "office-ui-fabric-react/lib/Utilities";
+import { IStackTokens, Stack, IStackProps, IStackStyles } from 'office-ui-fabric-react/lib/Stack';
+import * as ReactIcons from '@fluentui/react-icons';
+import { mergeStyleSets } from 'office-ui-fabric-react/lib/Styling';
+
 import {
   Pivot,
   PivotItem,
@@ -73,18 +77,22 @@ export interface IBbhcState {
   subFolders: IDropdownOption[];
   cols: [];
   rows: [];
+  AllUsers: any[];
   formData: {
+    ProviderID: string;
     Title: string;
     LegalName: string;
-    UsersId: {
-      results: any[];
-    };
+    // UsersId: {
+    //   results: any[];
+    // };
+    Users: string;
   };
 }
 
 export default class Bbhc extends React.Component<IBbhcProps, IBbhcState> {
   selUsers = [];
   allUsers = [];
+  fileObj = null;
 
   constructor(prop: IBbhcProps, state: IBbhcState) {
     super(prop);
@@ -94,12 +102,15 @@ export default class Bbhc extends React.Component<IBbhcProps, IBbhcState> {
       subFolders: [],
       cols: [],
       rows: [],
+      AllUsers: [''],
       formData: {
+        ProviderID: "",
         Title: "",
         LegalName: "",
-        UsersId: {
-          results: [],
-        },
+        // UsersId: {
+        //   results: [],
+        // },
+        Users: ''
       },
     };
   }
@@ -189,8 +200,51 @@ export default class Bbhc extends React.Component<IBbhcProps, IBbhcState> {
     });
   }
 
+  // processInputProvider = () => {
+  //   var formData = this.state.formData;
+  //   if (!formData.ProviderID) {
+  //     alert("Provider ID is required");
+  //     return;
+  //   }
+  //   if (!formData.Title) {
+  //     alert("Provider name is required");
+  //     return;
+  //   }
+  //   if (!formData.LegalName) {
+  //     alert("Legal name is required");
+  //     return;
+  //   }
+  //   if (this.selUsers.length <= 0) {
+  //     alert("Select any users");
+  //     return;
+  //   }
+  //   this.getUserData(0);
+  // };
+
+  // getUserData(index) {
+  //   var that = this;
+  //   sp.web.siteUsers
+  //     .getByLoginName(this.selUsers[index].id)
+  //     .get()
+  //     .then((res) => {
+  //       this.allUsers.push(res.Id);
+  //       index = index + 1;
+  //       if (index < that.selUsers.length) {
+  //         this.getUserData(index);
+  //       } else {
+  //         that.addToList();
+  //       }
+  //     });
+  // }
+
+
+
   processInputProvider = () => {
     var formData = this.state.formData;
+    if (!formData.ProviderID) {
+      alert("Provider ID is required");
+      return;
+    }
     if (!formData.Title) {
       alert("Provider name is required");
       return;
@@ -199,40 +253,40 @@ export default class Bbhc extends React.Component<IBbhcProps, IBbhcState> {
       alert("Legal name is required");
       return;
     }
-    if (this.selUsers.length <= 0) {
-      alert("Select any users");
-      return;
+    for (let index = 0; index < this.state.AllUsers.length; index++) {
+      const user = this.state.AllUsers[index];
+      if (/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(user)) {
+        formData.Users = formData.Users + user + ';';
+      } else {
+        alert('User ' + (index + 1) + ' not valid');
+        return;
+      }
     }
-    this.getUserData(0);
+    this.setState({ formData: formData });
+    this.addToList();
   };
 
-  getUserData(index) {
-    var that = this;
-    sp.web.siteUsers
-      .getByLoginName(this.selUsers[index].id)
-      .get()
-      .then((res) => {
-        this.allUsers.push(res.Id);
-        index = index + 1;
-        if (index < that.selUsers.length) {
-          this.getUserData(index);
-        } else {
-          that.addToList();
-        }
-      });
-  }
 
   addToList() {
-    var formData = this.state.formData;
-    formData.UsersId.results = this.allUsers;
-    this.setState({ formData: formData });
     sp.web.lists
       .getByTitle("ProviderDetails")
-      .items.add(formData)
+      .items.add(this.state.formData)
       .then((res) => {
         this.createProvider(this.state.providerName);
       });
   }
+
+  // addToList() {
+  //   var formData = this.state.formData;
+  //   formData.UsersId.results = this.allUsers;
+  //   this.setState({ formData: formData });
+  //   sp.web.lists
+  //     .getByTitle("ProviderDetails")
+  //     .items.add(formData)
+  //     .then((res) => {
+  //       this.createProvider(this.state.providerName);
+  //     });
+  // }
 
   cloneFolder = async () => {
     await this.getFolder("Shared Documents/2020", this.state.providerName);
@@ -283,36 +337,90 @@ export default class Bbhc extends React.Component<IBbhcProps, IBbhcState> {
 
   uploadFile = async (event) => {
     var reacthandler = this;
-    let fileObj = event.target.files[0];
-    ExcelRenderer(fileObj, (err, resp) => {
+    if (event.target.files && event.target.files.length > 0) {
+      reacthandler.fileObj = event.target.files[0];
+    } else {
+      reacthandler.fileObj = null;
+    }
+  };
+
+  uploadToList() {
+    var reacthandler = this;
+    if (!reacthandler.fileObj) {
+      return;
+    }
+    ExcelRenderer(reacthandler.fileObj, (err, resp) => {
       if (resp && resp.rows) {
         for (let index = 0; index < resp.rows.length; index++) {
           reacthandler.createProvider(resp.rows[index][0]);
         }
       }
     });
-  };
+  }
 
   private _getPeoplePickerItems(items: any[]) {
     this.selUsers = items;
   }
 
+  userchange(event) {
+    var allusers = this.state.AllUsers;
+    allusers[parseInt(event.target.id)] = event.target.value;
+    this.setState({ AllUsers: allusers });
+  }
+
+  removeuser(index) {
+    var allusers = this.state.AllUsers;
+    allusers.splice(index, 1);
+    this.setState({ AllUsers: allusers });
+  }
+
+  newuser() {
+    var allusers = this.state.AllUsers;
+    allusers.push('');
+    this.setState({ AllUsers: allusers });
+  }
+
   public render(): React.ReactElement<IBbhcProps> {
+
+    const stackTokens: IStackTokens = {
+      childrenGap: 4,
+    };
+
+
+    const columnstyle: Partial<IStackProps> = {
+      tokens: {
+        childrenGap: 5
+      },
+      styles: {
+        root: {
+          width: 300
+        }
+      },
+    };
+
     return (
       <div className={styles.bbhc}>
         <Pivot linkSize={PivotLinkSize.large}>
           <PivotItem headerText="Add Provider">
-            <div>
+
+            <Stack {...columnstyle}>
+
+              <TextField
+                label="Provider ID"
+                onChange={(e) => this.inputChangeHandler.call(this, e)}
+                width="100px"
+                name="ProviderID"
+                value={this.state.formData.ProviderID}
+              ></TextField>
+
               <TextField
                 label="Provider Name"
                 onChange={this.providerNameChange}
-                width="200px"
+                width="100px"
                 name="Title"
                 value={this.state.formData.Title}
               ></TextField>
-            </div>
 
-            <div>
               <TextField
                 label="Legal Name"
                 width="200px"
@@ -320,10 +428,8 @@ export default class Bbhc extends React.Component<IBbhcProps, IBbhcState> {
                 value={this.state.formData.LegalName}
                 name="LegalName"
               ></TextField>
-            </div>
 
-            <div>
-              <PeoplePicker
+              {/* <PeoplePicker
                 context={this.props.context}
                 titleText="Users"
                 personSelectionLimit={100}
@@ -335,8 +441,36 @@ export default class Bbhc extends React.Component<IBbhcProps, IBbhcState> {
                 showHiddenInUI={false}
                 principalTypes={[PrincipalType.User]}
                 resolveDelay={1000}
-              />
-            </div>
+              /> */}
+
+              {
+                this.state.AllUsers.map((user, index) => {
+                  if (index == this.state.AllUsers.length - 1) {
+                    return <div><TextField
+                      label={"User " + (index + 1)}
+                      width="200px"
+                      id={index + ''}
+                      onChange={(e) => this.userchange.call(this, e)}
+                      value={user}
+                      name="LegalName"
+                    ></TextField><a onClick={this.newuser.bind(this)}>Add</a></div>
+
+                  } else {
+                    return <div><TextField
+                      label={"User " + (index + 1)}
+                      width="200px"
+                      id={index + ''}
+                      onChange={(e) => this.userchange.call(this, e)}
+                      value={user}
+                      name="LegalName"
+                    ></TextField><a onClick={this.removeuser.bind(this, index)}>Remove</a></div>
+                  }
+
+                })
+              }
+
+
+            </Stack>
 
             <div className={styles["margin-top-20"]}>
               <PrimaryButton onClick={this.processInputProvider}>
@@ -348,10 +482,15 @@ export default class Bbhc extends React.Component<IBbhcProps, IBbhcState> {
             <input type="file" id={fileId} onChange={this.uploadFile}></input>
 
             <Label htmlFor={fileId}>
-              <Label>Attach File</Label>
+              <Label>Upload Providers List</Label>
             </Label>
+
+            <PrimaryButton text="Clone" onClick={this.uploadToList.bind(this)} />
+
           </PivotItem>
         </Pivot>
+
+
 
         {/*<div className={styles.container}>
           <div className={styles.row}>
