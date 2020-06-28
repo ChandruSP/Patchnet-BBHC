@@ -18,9 +18,16 @@ import { PrimaryButton } from "@fluentui/react";
 import { Label } from "office-ui-fabric-react/lib/Label";
 
 import { getId } from "office-ui-fabric-react/lib/Utilities";
+import {
+  Pivot,
+  PivotItem,
+  PivotLinkSize,
+} from "office-ui-fabric-react/lib/Pivot";
 
-import { PeoplePicker, PrincipalType } from "@pnp/spfx-controls-react/lib/PeoplePicker";
-
+import {
+  PeoplePicker,
+  PrincipalType,
+} from "@pnp/spfx-controls-react/lib/PeoplePicker";
 
 import {
   Dropdown,
@@ -71,12 +78,11 @@ export interface IBbhcState {
     LegalName: string;
     UsersId: {
       results: any[];
-    }
-  }
+    };
+  };
 }
 
 export default class Bbhc extends React.Component<IBbhcProps, IBbhcState> {
-
   selUsers = [];
   allUsers = [];
 
@@ -89,12 +95,12 @@ export default class Bbhc extends React.Component<IBbhcProps, IBbhcState> {
       cols: [],
       rows: [],
       formData: {
-        Title: '',
-        LegalName: '',
+        Title: "",
+        LegalName: "",
         UsersId: {
-          results: []
-        }
-      }
+          results: [],
+        },
+      },
     };
   }
   providerNameChange = (event) => {
@@ -106,7 +112,7 @@ export default class Bbhc extends React.Component<IBbhcProps, IBbhcState> {
     let formData = this.state.formData;
     formData[e.target.name] = e.target.value;
     this.setState({
-      formData
+      formData,
     });
   }
 
@@ -186,31 +192,34 @@ export default class Bbhc extends React.Component<IBbhcProps, IBbhcState> {
   processInputProvider = () => {
     var formData = this.state.formData;
     if (!formData.Title) {
-      alert('Provider name is required');
+      alert("Provider name is required");
       return;
     }
     if (!formData.LegalName) {
-      alert('Legal name is required');
+      alert("Legal name is required");
       return;
     }
     if (this.selUsers.length <= 0) {
-      alert('Select any users');
+      alert("Select any users");
       return;
     }
     this.getUserData(0);
-  }
+  };
 
   getUserData(index) {
     var that = this;
-    sp.web.siteUsers.getByLoginName(this.selUsers[index].id).get().then((res) => {
-      this.allUsers.push(res.Id);
-      index = index + 1;
-      if (index < that.selUsers.length) {
-        this.getUserData(index);
-      } else {
-        that.addToList();
-      }
-    });
+    sp.web.siteUsers
+      .getByLoginName(this.selUsers[index].id)
+      .get()
+      .then((res) => {
+        this.allUsers.push(res.Id);
+        index = index + 1;
+        if (index < that.selUsers.length) {
+          this.getUserData(index);
+        } else {
+          that.addToList();
+        }
+      });
   }
 
   addToList() {
@@ -291,82 +300,59 @@ export default class Bbhc extends React.Component<IBbhcProps, IBbhcState> {
   public render(): React.ReactElement<IBbhcProps> {
     return (
       <div className={styles.bbhc}>
-        <div>
-          <h2>Add Provider</h2>
+        <Pivot linkSize={PivotLinkSize.large}>
+          <PivotItem headerText="Add Provider">
+            <div>
+              <TextField
+                label="Provider Name"
+                onChange={this.providerNameChange}
+                width="200px"
+                name="Title"
+                value={this.state.formData.Title}
+              ></TextField>
+            </div>
 
-          <div>
-            <TextField
-              label="Provider Name"
-              onChange={this.providerNameChange}
-              width="200px"
-              name="Title"
-              value={this.state.formData.Title}
-            ></TextField>
-          </div>
+            <div>
+              <TextField
+                label="Legal Name"
+                width="200px"
+                onChange={(e) => this.inputChangeHandler.call(this, e)}
+                value={this.state.formData.LegalName}
+                name="LegalName"
+              ></TextField>
+            </div>
 
-          <div>
-            <TextField
-              label="Legal Name"
-              width="200px"
-              onChange={(e) => this.inputChangeHandler.call(this, e)}
-              value={this.state.formData.LegalName}
-              name="LegalName"
-            ></TextField>
-          </div>
+            <div>
+              <PeoplePicker
+                context={this.props.context}
+                titleText="Users"
+                personSelectionLimit={100}
+                groupName={""}
+                showtooltip={true}
+                isRequired={false}
+                disabled={false}
+                selectedItems={this._getPeoplePickerItems.bind(this)}
+                showHiddenInUI={false}
+                principalTypes={[PrincipalType.User]}
+                resolveDelay={1000}
+              />
+            </div>
 
-          <div>
-            <PeoplePicker
-              context={this.props.context}
-              titleText="Users"
-              personSelectionLimit={100}
-              groupName={""}
-              showtooltip={true}
-              isRequired={false}
-              disabled={false}
-              selectedItems={this._getPeoplePickerItems.bind(this)}
-              showHiddenInUI={false}
-              principalTypes={[PrincipalType.User]}
-              resolveDelay={1000} />
-          </div>
+            <div className={styles["margin-top-20"]}>
+              <PrimaryButton onClick={this.processInputProvider}>
+                Add a New Provider
+              </PrimaryButton>
+            </div>
+          </PivotItem>
+          <PivotItem headerText="Upload Excel File">
+            <input type="file" id={fileId} onChange={this.uploadFile}></input>
 
-          <div>
-            <PrimaryButton onClick={this.processInputProvider}>
-              Add a New Provider
-            </PrimaryButton>
-          </div>
-        </div>
-        <div>
-          <h2>Clone Folder</h2>
+            <Label htmlFor={fileId}>
+              <Label>Attach File</Label>
+            </Label>
+          </PivotItem>
+        </Pivot>
 
-          <div>
-            <PrimaryButton onClick={this.cloneFolder}>Clone</PrimaryButton>
-          </div>
-        </div>
-        <div>
-          <h2>Upload Excel File</h2>
-          <input type="file" id={fileId} onChange={this.uploadFile}></input>
-
-          <Label htmlFor={fileId}>
-            <Label>Attach File</Label>
-          </Label>
-        </div>
-        <div>
-          <h2>Add File</h2>
-          <div>
-            <Dropdown
-              placeholder="Select an option"
-              label="Basic uncontrolled example"
-              options={this.state.folders}
-            />
-          </div>
-          <div>
-            <Dropdown
-              placeholder="Select an option"
-              label="Basic uncontrolled example"
-              options={options}
-            />
-          </div>
-        </div>
         {/*<div className={styles.container}>
           <div className={styles.row}>
             <div className={styles.column}>
