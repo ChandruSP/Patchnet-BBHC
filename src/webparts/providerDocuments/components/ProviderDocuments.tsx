@@ -18,6 +18,14 @@ import { Label } from "office-ui-fabric-react/lib/Label";
 
 import { getId } from "office-ui-fabric-react/lib/Utilities";
 
+
+
+import 'alertifyjs';
+
+import '../../../ExternalRef/CSS/style.css';
+import '../../../ExternalRef/CSS/alertify.min.css';
+var alertify: any = require('../../../ExternalRef/JS/alertify.min.js');
+
 import {
   Dropdown,
   DropdownMenuItemType,
@@ -42,6 +50,8 @@ export default class ProviderDocuments extends React.Component<IProviderDocument
 
   constructor(props) {
     super(props);
+
+    alertify.set("notifier", "position", "top-right");
     this.state = {
       folders: [],
       destinationPath: [],
@@ -111,7 +121,7 @@ export default class ProviderDocuments extends React.Component<IProviderDocument
       if (destinationPaths.length > 0) {
 
         if (destinationPaths.length != this.state.folders.length) {
-          alert('Fill all dropdown values');
+          alertify.error('Fill all dropdown values');
           return;
         }
 
@@ -122,13 +132,13 @@ export default class ProviderDocuments extends React.Component<IProviderDocument
         var that = this;
         sp.web.getFolderByServerRelativeUrl(folderPath).files.add(that.state.file.name, that.state.file, true)
           .then(function (result) {
-            alert('File uploaded successfully');
+            alertify.success('File uploaded successfully');
           });
       } else {
-        alert('Select any folder');
+        alertify.error('Select any folder');
       }
     } else {
-      alert('Select any file');
+      alertify.error('Select any file');
     }
   }
 
@@ -189,7 +199,7 @@ export default class ProviderDocuments extends React.Component<IProviderDocument
 
         <input type="file" name="UploadedFile" onChange={(e) => this.fileUpload.call(this, e)} />
 
-        <PrimaryButton text="Post" onClick={this.uploadFile.bind(this)} />
+        <PrimaryButton text="Upload" onClick={this.uploadFile.bind(this)} />
 
 
       </div>

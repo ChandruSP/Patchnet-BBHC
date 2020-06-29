@@ -21,6 +21,13 @@ import { getId } from "office-ui-fabric-react/lib/Utilities";
 import { IStackTokens, Stack, IStackProps, IStackStyles } from 'office-ui-fabric-react/lib/Stack';
 import * as ReactIcons from '@fluentui/react-icons';
 import { mergeStyleSets } from 'office-ui-fabric-react/lib/Styling';
+import { IconButton } from '@fluentui/react/lib/Button';
+
+import 'alertifyjs';
+
+import '../../../ExternalRef/CSS/style.css';
+import '../../../ExternalRef/CSS/alertify.min.css';  
+var alertify: any = require('../../../ExternalRef/JS/alertify.min.js');
 
 import {
   Pivot,
@@ -70,6 +77,7 @@ import {
   TextField,
   MaskedTextField,
 } from "office-ui-fabric-react/lib/TextField";
+import { Icon } from "office-ui-fabric-react/lib/Icon";
 
 export interface IBbhcState {
   providerName: "";
@@ -96,6 +104,9 @@ export default class Bbhc extends React.Component<IBbhcProps, IBbhcState> {
 
   constructor(prop: IBbhcProps, state: IBbhcState) {
     super(prop);
+    
+    alertify.set("notifier", "position", "top-right");
+
     this.state = {
       providerName: "",
       folders: [],
@@ -203,19 +214,19 @@ export default class Bbhc extends React.Component<IBbhcProps, IBbhcState> {
   // processInputProvider = () => {
   //   var formData = this.state.formData;
   //   if (!formData.ProviderID) {
-  //     alert("Provider ID is required");
+  //     alertify.error("Provider ID is required");
   //     return;
   //   }
   //   if (!formData.Title) {
-  //     alert("Provider name is required");
+  //     alertify.error("Provider name is required");
   //     return;
   //   }
   //   if (!formData.LegalName) {
-  //     alert("Legal name is required");
+  //     alertify.error("Legal name is required");
   //     return;
   //   }
   //   if (this.selUsers.length <= 0) {
-  //     alert("Select any users");
+  //     alertify.error("Select any users");
   //     return;
   //   }
   //   this.getUserData(0);
@@ -242,15 +253,15 @@ export default class Bbhc extends React.Component<IBbhcProps, IBbhcState> {
   processInputProvider = () => {
     var formData = this.state.formData;
     if (!formData.ProviderID) {
-      alert("Provider ID is required");
+      alertify.error("Provider ID is required");
       return;
     }
     if (!formData.Title) {
-      alert("Provider name is required");
+      alertify.error("Provider name is required");
       return;
     }
     if (!formData.LegalName) {
-      alert("Legal name is required");
+      alertify.error("Legal name is required");
       return;
     }
     for (let index = 0; index < this.state.AllUsers.length; index++) {
@@ -258,7 +269,7 @@ export default class Bbhc extends React.Component<IBbhcProps, IBbhcState> {
       if (/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(user)) {
         formData.Users = formData.Users + user + ';';
       } else {
-        alert('User ' + (index + 1) + ' not valid');
+        alertify.error('User ' + (index + 1) + ' not valid');
         return;
       }
     }
@@ -290,7 +301,7 @@ export default class Bbhc extends React.Component<IBbhcProps, IBbhcState> {
 
   cloneFolder = async () => {
     await this.getFolder("Shared Documents/2020", this.state.providerName);
-    alert("Folder Cloned Successfully");
+    alertify.success("Folder Cloned Successfully");
   };
 
   createProvider = (providerName) => {
@@ -300,7 +311,7 @@ export default class Bbhc extends React.Component<IBbhcProps, IBbhcState> {
       .then(function (data) {
         reacthandler.getFolder("TemplateLibrary", providerName);
       });
-    alert("Provider is created");
+    alertify.success("Provider is created");
   };
 
   getFolder = (folderPath, providerName) => {
@@ -347,6 +358,7 @@ export default class Bbhc extends React.Component<IBbhcProps, IBbhcState> {
   uploadToList() {
     var reacthandler = this;
     if (!reacthandler.fileObj) {
+      alertify.console.error('Select any file to upload');
       return;
     }
     ExcelRenderer(reacthandler.fileObj, (err, resp) => {
@@ -385,7 +397,11 @@ export default class Bbhc extends React.Component<IBbhcProps, IBbhcState> {
     const stackTokens: IStackTokens = {
       childrenGap: 4,
     };
-
+    const stackStyles: Partial<IStackStyles> = {
+      root: {
+        width: 600
+      }
+    };
 
     const columnstyle: Partial<IStackProps> = {
       tokens: {
@@ -393,11 +409,48 @@ export default class Bbhc extends React.Component<IBbhcProps, IBbhcState> {
       },
       styles: {
         root: {
-          width: 300
+          width: 300,
+          paddingTop:10
         }
       },
     };
 
+    const iconcolumnstyle: Partial<IStackProps> = {
+      tokens: {
+        childrenGap: 5
+      },
+      styles: {
+        root: {
+          width: 300,
+          paddingTop: 28
+        }
+      },
+    };
+
+
+    const classes = mergeStyleSets({
+      cell: {
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        margin: '80px',
+        float: 'left',
+        height: '50px',
+        width: '50px',
+      },
+      icon: {
+        fontSize: '50px',
+      },
+      code: {
+        background: '#f2f2f2',
+        borderRadius: '4px',
+        padding: '4px',
+      },
+      navigationText: {
+        width: 100,
+        margin: '0 5px',
+      },
+    });
     return (
       <div className={styles.bbhc}>
         <Pivot linkSize={PivotLinkSize.large}>
@@ -446,24 +499,46 @@ export default class Bbhc extends React.Component<IBbhcProps, IBbhcState> {
               {
                 this.state.AllUsers.map((user, index) => {
                   if (index == this.state.AllUsers.length - 1) {
-                    return <div><TextField
-                      label={"User " + (index + 1)}
-                      width="200px"
-                      id={index + ''}
-                      onChange={(e) => this.userchange.call(this, e)}
-                      value={user}
-                      name="LegalName"
-                    ></TextField><a onClick={this.newuser.bind(this)}>Add</a></div>
+                    return <div>
+                      <Stack horizontal tokens={stackTokens} styles={stackStyles} >
+                        <Stack {...columnstyle} >
+                          <TextField
+                            label="User"
+                            width="200px"
+                            id={index + ''}
+                            onChange={(e) => this.userchange.call(this, e)}
+                            value={user}
+                            name="userName"
+                          ></TextField>
+                        </Stack>
 
+                        <Stack {...iconcolumnstyle} >
+                          <IconButton iconProps={{ iconName: 'Add' }} title="Add User" ariaLabel="Add" onClick={this.newuser.bind(this)} />
+                        </Stack>
+
+                      </Stack>
+                    </div>
                   } else {
-                    return <div><TextField
-                      label={"User " + (index + 1)}
-                      width="200px"
-                      id={index + ''}
-                      onChange={(e) => this.userchange.call(this, e)}
-                      value={user}
-                      name="LegalName"
-                    ></TextField><a onClick={this.removeuser.bind(this, index)}>Remove</a></div>
+                    return <div>
+
+                      <Stack horizontal tokens={stackTokens} styles={stackStyles} >
+                        <Stack {...columnstyle} >
+                          <TextField
+                            label="User"
+                            width="200px"
+                            id={index + ''}
+                            onChange={(e) => this.userchange.call(this, e)}
+                            value={user}
+                            name="userName"
+                          ></TextField>
+                        </Stack>
+
+                        <Stack {...iconcolumnstyle} >
+                          <IconButton iconProps={{ iconName: 'Cancel' }} title="Remove User" ariaLabel="Cancel" onClick={this.removeuser.bind(this, index)} />
+                        </Stack>
+
+                      </Stack>
+                    </div>
                   }
 
                 })
