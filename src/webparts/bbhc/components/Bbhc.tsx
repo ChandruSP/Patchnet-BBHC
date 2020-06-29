@@ -26,7 +26,7 @@ import { IconButton } from '@fluentui/react/lib/Button';
 import 'alertifyjs';
 
 import '../../../ExternalRef/CSS/style.css';
-import '../../../ExternalRef/CSS/alertify.min.css';  
+import '../../../ExternalRef/CSS/alertify.min.css';
 var alertify: any = require('../../../ExternalRef/JS/alertify.min.js');
 
 import {
@@ -104,7 +104,7 @@ export default class Bbhc extends React.Component<IBbhcProps, IBbhcState> {
 
   constructor(prop: IBbhcProps, state: IBbhcState) {
     super(prop);
-    
+
     alertify.set("notifier", "position", "top-right");
 
     this.state = {
@@ -307,7 +307,7 @@ export default class Bbhc extends React.Component<IBbhcProps, IBbhcState> {
   createProvider = (providerName) => {
     var reacthandler = this;
     sp.web.folders
-      .add("Shared Documents/" + currentYear + "/" + providerName)
+      .add("Shared Documents/" + (currentYear + 1) + "/" + providerName)
       .then(function (data) {
         reacthandler.getFolder("TemplateLibrary", providerName);
       });
@@ -330,7 +330,7 @@ export default class Bbhc extends React.Component<IBbhcProps, IBbhcState> {
     var reacthandler = this;
     var clonedUrl = data[index].ServerRelativeUrl.replace(
       "TemplateLibrary",
-      "Shared Documents/" + currentYear + "/" + providerName
+      "Shared Documents/" + (currentYear + 1) + "/" + providerName
     );
     // reacthandler.createFolder(clonedUrl);
     sp.web.folders.add(clonedUrl).then((res) => {
@@ -361,13 +361,17 @@ export default class Bbhc extends React.Component<IBbhcProps, IBbhcState> {
       alertify.console.error('Select any file to upload');
       return;
     }
-    ExcelRenderer(reacthandler.fileObj, (err, resp) => {
-      if (resp && resp.rows) {
-        for (let index = 0; index < resp.rows.length; index++) {
-          reacthandler.createProvider(resp.rows[index][0]);
-        }
-      }
-    });
+    sp.web.folders
+      .add("Shared Documents/" + (currentYear + 1))
+      .then(function (data) {
+        ExcelRenderer(reacthandler.fileObj, (err, resp) => {
+          if (resp && resp.rows) {
+            for (let index = 0; index < resp.rows.length; index++) {
+              reacthandler.createProvider(resp.rows[index][0]);
+            }
+          }
+        });
+      });
   }
 
   private _getPeoplePickerItems(items: any[]) {
@@ -410,7 +414,7 @@ export default class Bbhc extends React.Component<IBbhcProps, IBbhcState> {
       styles: {
         root: {
           width: 300,
-          paddingTop:10
+          paddingTop: 10
         }
       },
     };
