@@ -274,16 +274,16 @@ export default class Bbhc extends React.Component<IBbhcProps, IBbhcState> {
       }
     }
     this.setState({ formData: formData });
-    this.addToList();
+    this.addToList(currentYear);
   };
 
 
-  addToList() {
+  addToList(year) {
     sp.web.lists
       .getByTitle("ProviderDetails")
       .items.add(this.state.formData)
       .then((res) => {
-        this.createProvider(this.state.providerName);
+        this.createProvider(this.state.providerName, year);
       });
   }
 
@@ -299,45 +299,45 @@ export default class Bbhc extends React.Component<IBbhcProps, IBbhcState> {
   //     });
   // }
 
-  cloneFolder = async () => {
-    await this.getFolder("Shared Documents/2020", this.state.providerName);
-    alertify.success("Folder Cloned Successfully");
-  };
+  // cloneFolder = async () => {
+  //   await this.getFolder("Shared Documents/2020", this.state.providerName);
+  //   alertify.success("Folder Cloned Successfully");
+  // };
 
-  createProvider = (providerName) => {
+  createProvider = (providerName, year) => {
     var reacthandler = this;
     sp.web.folders
-      .add("Shared Documents/" + (currentYear + 1) + "/" + providerName)
+      .add("Shared Documents/" + year + "/" + providerName)
       .then(function (data) {
-        reacthandler.getFolder("TemplateLibrary", providerName);
+        reacthandler.getFolder("TemplateLibrary", providerName, year);
       });
     alertify.success("Provider is created");
   };
 
-  getFolder = (folderPath, providerName) => {
+  getFolder = (folderPath, providerName, year) => {
     var reacthandler = this;
     sp.web
       .getFolderByServerRelativePath(folderPath)
       .folders.get()
       .then(function (data) {
         if (data.length > 0) {
-          reacthandler.processFolder(0, data, providerName);
+          reacthandler.processFolder(0, data, providerName, year);
         }
       });
   };
 
-  processFolder(index, data, providerName) {
+  processFolder(index, data, providerName, year) {
     var reacthandler = this;
     var clonedUrl = data[index].ServerRelativeUrl.replace(
       "TemplateLibrary",
-      "Shared Documents/" + (currentYear + 1) + "/" + providerName
+      "Shared Documents/" + year + "/" + providerName
     );
     // reacthandler.createFolder(clonedUrl);
     sp.web.folders.add(clonedUrl).then((res) => {
-      reacthandler.getFolder(data[index].ServerRelativeUrl, providerName);
+      reacthandler.getFolder(data[index].ServerRelativeUrl, providerName, year);
       index = index + 1;
       if (index < data.length) {
-        reacthandler.processFolder(index, data, providerName);
+        reacthandler.processFolder(index, data, providerName, year);
       }
     });
   }
@@ -367,7 +367,7 @@ export default class Bbhc extends React.Component<IBbhcProps, IBbhcState> {
         ExcelRenderer(reacthandler.fileObj, (err, resp) => {
           if (resp && resp.rows) {
             for (let index = 0; index < resp.rows.length; index++) {
-              reacthandler.createProvider(resp.rows[index][0]);
+              reacthandler.createProvider(resp.rows[index][0], (currentYear + 1));
             }
           }
         });
