@@ -36,11 +36,14 @@ import {
 const currentYear = new Date().getFullYear();
 import { IProviderDocumentsProps } from './IProviderDocumentsProps';
 
+
 export interface IBbhcState {
   folders: any[];
   destinationPath: any[];
   file: any;
 }
+
+
 
 export default class ProviderDocuments extends React.Component<IProviderDocumentsProps, IBbhcState> {
 
@@ -50,6 +53,12 @@ export default class ProviderDocuments extends React.Component<IProviderDocument
 
   constructor(props) {
     super(props);
+    
+    sp.setup({
+      sp: {
+        baseUrl: this.props.siteUrl
+      },
+    });
 
     alertify.set("notifier", "position", "top-right");
     this.state = {

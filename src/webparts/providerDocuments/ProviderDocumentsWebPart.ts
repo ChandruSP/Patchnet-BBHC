@@ -26,7 +26,8 @@ export default class ProviderDocumentsWebPart extends BaseClientSideWebPart<IPro
       ProviderDocuments,
       {
         description: this.properties.description,
-        currentContext: currentContext
+        currentContext: currentContext,
+        siteUrl: this.context.pageContext.web.absoluteUrl
       }
     );
 
