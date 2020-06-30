@@ -41,6 +41,7 @@ export interface IBbhcState {
   folders: any[];
   destinationPath: any[];
   file: any;
+  selectedPath: string;
 }
 
 
@@ -53,7 +54,7 @@ export default class ProviderDocuments extends React.Component<IProviderDocument
 
   constructor(props) {
     super(props);
-    
+
     sp.setup({
       sp: {
         baseUrl: this.props.siteUrl
@@ -62,25 +63,62 @@ export default class ProviderDocuments extends React.Component<IProviderDocument
 
     alertify.set("notifier", "position", "top-right");
     this.state = {
-      folders: [],
+      folders: [{
+        key: 'Reports - Deaf and Hard of Hearing',
+        text: 'Reports - Deaf and Hard of Hearing'
+      },
+      {
+        key: 'Reports - Voter Registration',
+        text: 'Reports - Voter Registration'
+      },
+      {
+        key: 'Reports - Miscellaneous',
+        text: 'Reports - Miscellaneous'
+      },
+      {
+        key: 'Reports - Insurance and Licensing',
+        text: 'Reports - Insurance and Licensing'
+      },
+      {
+        key: 'Incidents and Complaints - Submissions',
+        text: 'Incidents and Complaints - Submissions'
+      },
+      {
+        key: 'Incidents and Complaints - Corrective Action Plans',
+        text: 'Incidents and Complaints - Corrective Action Plans'
+      },
+      {
+        key: 'Customer Satisfaction Surveys',
+        text: 'Customer Satisfaction Surveys'
+      },
+      {
+        key: 'Contract Monitoring - Submission for Desk Review',
+        text: 'Contract Monitoring - Submission for Desk Review'
+      },
+      {
+        key: 'Contract Monitoring - Corrective Action Plans and Follow-up',
+        text: 'Contract Monitoring - Corrective Action Plans and Follow-up'
+      },
+      {
+        key: 'Billing - Invoice',
+        text: 'Billing - Invoice'
+      },
+      {
+        key: 'Billing - Invoice Supportive Documentation',
+        text: 'Billing - Invoice Supportive Documentation'
+      },
+      {
+        key: 'Billing - Yearly Audits',
+        text: 'Billing - Yearly Audits'
+      }],
       destinationPath: [],
       file: null,
+      selectedPath: ''
     };
     this.getProviderMetaData();
   }
 
   getProviderMetaData() {
-    // var that = this;
-    // sp.web.lists
-    //   .getByTitle("ProviderDetails")
-    //   .items.select("Title")
-    //   .filter("Users/EMail eq '" + this.props.currentContext.pageContext.user.email + "'").get().then((res) => {
-    //     if (res.length > 0) {
-    //       that.userName = res[0].Title;
-    //       that.getFolders(res[0].Title);
-    //     }
-    //   });
-
     var that = this;
     sp.web.lists
       .getByTitle("ProviderDetails")
@@ -88,7 +126,7 @@ export default class ProviderDocuments extends React.Component<IProviderDocument
       .filter("substringof('" + this.props.currentContext.pageContext.user.email.toLowerCase() + "',Users)").get().then((res) => {
         if (res.length > 0) {
           that.userName = res[0].Title;
-          that.getFolders(res[0].Title);
+          // that.getFolders(res[0].Title);
         }
       });
   }
@@ -124,19 +162,42 @@ export default class ProviderDocuments extends React.Component<IProviderDocument
     }
   }
 
+  // uploadFile() {
+  //   if (this.state.file) {
+  //     var destinationPaths = this.state.destinationPath;
+  //     if (destinationPaths.length > 0) {
+
+  //       if (destinationPaths.length != this.state.folders.length) {
+  //         alertify.error('Fill all dropdown values');
+  //         return;
+  //       }
+
+  //       var folderPath = this.sharedDocument + '/' + this.currentYear + '/' + this.userName + '/';
+  //       for (let index = 0; index < destinationPaths.length; index++) {
+  //         folderPath = folderPath + destinationPaths[index].value + '/';
+  //       }
+  //       var that = this;
+  //       sp.web.getFolderByServerRelativeUrl(folderPath).files.add(that.state.file.name, that.state.file, true)
+  //         .then(function (result) {
+  //           alertify.success('File uploaded successfully');
+  //         });
+  //     } else {
+  //       alertify.error('Select any folder');
+  //     }
+  //   } else {
+  //     alertify.error('Select any file');
+  //   }
+  // }
+
+
   uploadFile() {
     if (this.state.file) {
-      var destinationPaths = this.state.destinationPath;
-      if (destinationPaths.length > 0) {
-
-        if (destinationPaths.length != this.state.folders.length) {
-          alertify.error('Fill all dropdown values');
-          return;
-        }
-
+      var selectedPath = this.state.selectedPath;
+      if (selectedPath) {
         var folderPath = this.sharedDocument + '/' + this.currentYear + '/' + this.userName + '/';
+        var destinationPaths = selectedPath.split(' - ');
         for (let index = 0; index < destinationPaths.length; index++) {
-          folderPath = folderPath + destinationPaths[index].value + '/';
+          folderPath = folderPath + destinationPaths[index] + '/';
         }
         var that = this;
         sp.web.getFolderByServerRelativeUrl(folderPath).files.add(that.state.file.name, that.state.file, true)
@@ -153,56 +214,67 @@ export default class ProviderDocuments extends React.Component<IProviderDocument
 
   public render(): React.ReactElement<IProviderDocumentsProps> {
 
+    // const dropdownChange = (event: React.FormEvent<HTMLDivElement>, item: IDropdownOption): void => {
+    //   if (item) {
+    //     var dropDownIndex = parseInt(event.target["id"]);
+    //     var destinationPath = this.state.destinationPath;
+    //     var destinationFound = false;
+    //     for (let d = 0; d < destinationPath.length; d++) {
+    //       if (destinationPath[d].index == dropDownIndex) {
+    //         destinationPath[d].value = item.text;
+    //         destinationFound = true;
+    //         break;
+    //       }
+    //     }
+    //     if (!destinationFound) {
+    //       destinationPath.push({
+    //         index: dropDownIndex,
+    //         value: item.text
+    //       });
+    //     }
+    //     var stateFolder = this.state.folders;
+    //     var removeIndexes = [];
+    //     for (let index = dropDownIndex + 1; index < this.state.folders.length; index++) {
+    //       removeIndexes.push(index);
+    //     }
+    //     for (var i = removeIndexes.length - 1; i >= 0; i--) {
+    //       stateFolder.splice(removeIndexes[i], 1);
+    //       for (let d = 0; d < destinationPath.length; d++) {
+    //         if (destinationPath[d].index == removeIndexes[i]) {
+    //           destinationPath.splice(removeIndexes[i], 1);
+    //         }
+    //       }
+    //     }
+    //     this.setState({ folders: stateFolder, destinationPath: destinationPath });
+    //     this.getFolders(item.key + '/' + item.text);
+    //   }
+    // };
+
     const dropdownChange = (event: React.FormEvent<HTMLDivElement>, item: IDropdownOption): void => {
-      if (item) {
-        var dropDownIndex = parseInt(event.target["id"]);
-        var destinationPath = this.state.destinationPath;
-        var destinationFound = false;
-        for (let d = 0; d < destinationPath.length; d++) {
-          if (destinationPath[d].index == dropDownIndex) {
-            destinationPath[d].value = item.text;
-            destinationFound = true;
-            break;
-          }
-        }
-        if (!destinationFound) {
-          destinationPath.push({
-            index: dropDownIndex,
-            value: item.text
-          });
-        }
-        var stateFolder = this.state.folders;
-        var removeIndexes = [];
-        for (let index = dropDownIndex + 1; index < this.state.folders.length; index++) {
-          removeIndexes.push(index);
-        }
-        for (var i = removeIndexes.length - 1; i >= 0; i--) {
-          stateFolder.splice(removeIndexes[i], 1);
-          for (let d = 0; d < destinationPath.length; d++) {
-            if (destinationPath[d].index == removeIndexes[i]) {
-              destinationPath.splice(removeIndexes[i], 1);
-            }
-          }
-        }
-        this.setState({ folders: stateFolder, destinationPath: destinationPath });
-        this.getFolders(item.key + '/' + item.text);
-      }
-    };
+      this.setState({ selectedPath: item.text });
+    }
 
     return (
       <div>
         <h2>Add File</h2>
         <div>
           {
-            this.state.folders.map((folder, index) => {
-              return <Dropdown
-                placeholder="Select an option"
-                label="Folders"
-                options={folder}
-                onChange={dropdownChange}
-                id={index + ""}
-              />
-            })
+            // this.state.folders.map((folder, index) => {
+            //   return <Dropdown
+            //     placeholder="Select an option"
+            //     label="Folders"
+            //     options={folder}
+            //     onChange={dropdownChange}
+            //     id={index + ""}
+            //   />
+            // })
+
+            <Dropdown
+              placeholder="Select an option"
+              label="Submission Types"
+              options={this.state.folders}
+              onChange={dropdownChange}
+            />
           }
         </div>
 
