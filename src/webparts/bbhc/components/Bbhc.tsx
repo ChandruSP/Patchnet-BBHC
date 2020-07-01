@@ -16,18 +16,24 @@ import { IItemAddResult } from "@pnp/sp/items";
 
 import { PrimaryButton } from "@fluentui/react";
 import { Label } from "office-ui-fabric-react/lib/Label";
+import { Image, IImageProps } from "office-ui-fabric-react/lib/Image";
 
 import { getId } from "office-ui-fabric-react/lib/Utilities";
-import { IStackTokens, Stack, IStackProps, IStackStyles } from 'office-ui-fabric-react/lib/Stack';
-import * as ReactIcons from '@fluentui/react-icons';
-import { mergeStyleSets } from 'office-ui-fabric-react/lib/Styling';
-import { IconButton } from '@fluentui/react/lib/Button';
+import {
+  IStackTokens,
+  Stack,
+  IStackProps,
+  IStackStyles,
+} from "office-ui-fabric-react/lib/Stack";
+import * as ReactIcons from "@fluentui/react-icons";
+import { mergeStyleSets } from "office-ui-fabric-react/lib/Styling";
+import { IconButton } from "@fluentui/react/lib/Button";
 
-import 'alertifyjs';
+import "alertifyjs";
 
-import '../../../ExternalRef/CSS/style.css';
-import '../../../ExternalRef/CSS/alertify.min.css';
-var alertify: any = require('../../../ExternalRef/JS/alertify.min.js');
+import "../../../ExternalRef/CSS/style.css";
+import "../../../ExternalRef/CSS/alertify.min.css";
+var alertify: any = require("../../../ExternalRef/JS/alertify.min.js");
 
 import {
   Pivot,
@@ -50,6 +56,12 @@ import {
 import { ExcelRenderer } from "react-excel-renderer";
 
 var folders: IDropdownOption[] = [];
+const attachImageStyles = {
+  image: {
+    padding: "0px",
+  },
+};
+
 const currentYear = new Date().getFullYear();
 const fileId = getId("anInput");
 const options: IDropdownOption[] = [
@@ -95,12 +107,14 @@ export interface IBbhcState {
     // };
     Users: string;
   };
+  fileName: "";
 }
 
 export default class Bbhc extends React.Component<IBbhcProps, IBbhcState> {
   selUsers = [];
   allUsers = [];
   fileObj = null;
+  rootFolder = "Providers Library";
 
   constructor(prop: IBbhcProps, state: IBbhcState) {
     super(prop);
@@ -113,7 +127,7 @@ export default class Bbhc extends React.Component<IBbhcProps, IBbhcState> {
       subFolders: [],
       cols: [],
       rows: [],
-      AllUsers: [''],
+      AllUsers: [""],
       formData: {
         ProviderID: "",
         Title: "",
@@ -121,8 +135,9 @@ export default class Bbhc extends React.Component<IBbhcProps, IBbhcState> {
         // UsersId: {
         //   results: [],
         // },
-        Users: ''
+        Users: "",
       },
+      fileName: "",
     };
   }
   providerNameChange = (event) => {
@@ -248,8 +263,6 @@ export default class Bbhc extends React.Component<IBbhcProps, IBbhcState> {
   //     });
   // }
 
-
-
   processInputProvider = () => {
     var formData = this.state.formData;
     if (!formData.ProviderID) {
@@ -267,16 +280,15 @@ export default class Bbhc extends React.Component<IBbhcProps, IBbhcState> {
     for (let index = 0; index < this.state.AllUsers.length; index++) {
       const user = this.state.AllUsers[index];
       if (/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(user)) {
-        formData.Users = formData.Users + user + ';';
+        formData.Users = formData.Users + user + ";";
       } else {
-        alertify.error('User ' + (index + 1) + ' not valid');
+        alertify.error("User " + (index + 1) + " not valid");
         return;
       }
     }
     this.setState({ formData: formData });
     this.addToList(currentYear);
   };
-
 
   addToList(year) {
     sp.web.lists
@@ -306,11 +318,11 @@ export default class Bbhc extends React.Component<IBbhcProps, IBbhcState> {
 
   createProvider = (providerName, year) => {
     var reacthandler = this;
-    sp.web.folders
-      .add("Shared Documents/" + year + "/" + providerName)
-      .then(function (data) {
-        reacthandler.getFolder("TemplateLibrary", providerName, year);
-      });
+    var folderName =
+      reacthandler.rootFolder + "/" + "FY " + (year - 1) + "-" + year;
+    sp.web.folders.add(folderName + "/" + providerName).then(function (data) {
+      reacthandler.getFolder("TemplateLibrary", providerName, year);
+    });
     alertify.success("Provider is created");
   };
 
@@ -328,9 +340,12 @@ export default class Bbhc extends React.Component<IBbhcProps, IBbhcState> {
 
   processFolder(index, data, providerName, year) {
     var reacthandler = this;
+
+    var folderName =
+      reacthandler.rootFolder + "/" + "FY " + (year - 1) + "-" + year;
     var clonedUrl = data[index].ServerRelativeUrl.replace(
       "TemplateLibrary",
-      "Shared Documents/" + year + "/" + providerName
+      folderName + "/" + providerName
     );
     // reacthandler.createFolder(clonedUrl);
     sp.web.folders.add(clonedUrl).then((res) => {
@@ -350,6 +365,7 @@ export default class Bbhc extends React.Component<IBbhcProps, IBbhcState> {
     var reacthandler = this;
     if (event.target.files && event.target.files.length > 0) {
       reacthandler.fileObj = event.target.files[0];
+      reacthandler.setState({ fileName: event.target.files[0].name });
     } else {
       reacthandler.fileObj = null;
     }
@@ -358,7 +374,7 @@ export default class Bbhc extends React.Component<IBbhcProps, IBbhcState> {
   uploadToList() {
     var reacthandler = this;
     if (!reacthandler.fileObj) {
-      alertify.console.error('Select any file to upload');
+      alertify.console.error("Select any file to upload");
       return;
     }
     sp.web.folders
@@ -367,7 +383,7 @@ export default class Bbhc extends React.Component<IBbhcProps, IBbhcState> {
         ExcelRenderer(reacthandler.fileObj, (err, resp) => {
           if (resp && resp.rows) {
             for (let index = 0; index < resp.rows.length; index++) {
-              reacthandler.createProvider(resp.rows[index][0], (currentYear + 1));
+              reacthandler.createProvider(resp.rows[index][0], currentYear + 1);
             }
           }
         });
@@ -392,76 +408,72 @@ export default class Bbhc extends React.Component<IBbhcProps, IBbhcState> {
 
   newuser() {
     var allusers = this.state.AllUsers;
-    allusers.push('');
+    allusers.push("");
     this.setState({ AllUsers: allusers });
   }
 
   public render(): React.ReactElement<IBbhcProps> {
-
     const stackTokens: IStackTokens = {
       childrenGap: 4,
     };
     const stackStyles: Partial<IStackStyles> = {
       root: {
-        width: 600
-      }
+        width: 600,
+      },
     };
 
     const columnstyle: Partial<IStackProps> = {
       tokens: {
-        childrenGap: 5
+        childrenGap: 5,
       },
       styles: {
         root: {
           width: 300,
-          paddingTop: 10
-        }
+          paddingTop: 10,
+        },
       },
     };
 
     const iconcolumnstyle: Partial<IStackProps> = {
       tokens: {
-        childrenGap: 5
+        childrenGap: 5,
       },
       styles: {
         root: {
           width: 300,
-          paddingTop: 28
-        }
+          paddingTop: 28,
+        },
       },
     };
 
-
     const classes = mergeStyleSets({
       cell: {
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        margin: '80px',
-        float: 'left',
-        height: '50px',
-        width: '50px',
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        margin: "80px",
+        float: "left",
+        height: "50px",
+        width: "50px",
       },
       icon: {
-        fontSize: '50px',
+        fontSize: "50px",
       },
       code: {
-        background: '#f2f2f2',
-        borderRadius: '4px',
-        padding: '4px',
+        background: "#f2f2f2",
+        borderRadius: "4px",
+        padding: "4px",
       },
       navigationText: {
         width: 100,
-        margin: '0 5px',
+        margin: "0 5px",
       },
     });
     return (
       <div className={styles.bbhc}>
         <Pivot linkSize={PivotLinkSize.large}>
           <PivotItem headerText="Add Provider">
-
             <Stack {...columnstyle}>
-
               <TextField
                 label="Provider ID"
                 onChange={(e) => this.inputChangeHandler.call(this, e)}
@@ -500,55 +512,69 @@ export default class Bbhc extends React.Component<IBbhcProps, IBbhcState> {
                 resolveDelay={1000}
               /> */}
 
-              {
-                this.state.AllUsers.map((user, index) => {
-                  if (index == this.state.AllUsers.length - 1) {
-                    return <div>
-                      <Stack horizontal tokens={stackTokens} styles={stackStyles} >
-                        <Stack {...columnstyle} >
+              {this.state.AllUsers.map((user, index) => {
+                if (index == this.state.AllUsers.length - 1) {
+                  return (
+                    <div>
+                      <Stack
+                        horizontal
+                        tokens={stackTokens}
+                        styles={stackStyles}
+                      >
+                        <Stack {...columnstyle}>
                           <TextField
                             label="User"
                             width="200px"
-                            id={index + ''}
+                            id={index + ""}
                             onChange={(e) => this.userchange.call(this, e)}
                             value={user}
                             name="userName"
                           ></TextField>
                         </Stack>
 
-                        <Stack {...iconcolumnstyle} >
-                          <IconButton iconProps={{ iconName: 'Add' }} title="Add User" ariaLabel="Add" onClick={this.newuser.bind(this)} />
+                        <Stack {...iconcolumnstyle}>
+                          <IconButton
+                            iconProps={{ iconName: "Add" }}
+                            title="Add User"
+                            ariaLabel="Add"
+                            onClick={this.newuser.bind(this)}
+                          />
                         </Stack>
-
                       </Stack>
                     </div>
-                  } else {
-                    return <div>
-
-                      <Stack horizontal tokens={stackTokens} styles={stackStyles} >
-                        <Stack {...columnstyle} >
+                  );
+                } else {
+                  return (
+                    <div>
+                      <Stack
+                        horizontal
+                        tokens={stackTokens}
+                        styles={stackStyles}
+                      >
+                        <Stack {...columnstyle}>
                           <TextField
                             label="User"
                             width="200px"
-                            id={index + ''}
+                            id={index + ""}
                             onChange={(e) => this.userchange.call(this, e)}
                             value={user}
                             name="userName"
                           ></TextField>
                         </Stack>
 
-                        <Stack {...iconcolumnstyle} >
-                          <IconButton iconProps={{ iconName: 'Cancel' }} title="Remove User" ariaLabel="Cancel" onClick={this.removeuser.bind(this, index)} />
+                        <Stack {...iconcolumnstyle}>
+                          <IconButton
+                            iconProps={{ iconName: "Cancel" }}
+                            title="Remove User"
+                            ariaLabel="Cancel"
+                            onClick={this.removeuser.bind(this, index)}
+                          />
                         </Stack>
-
                       </Stack>
                     </div>
-                  }
-
-                })
-              }
-
-
+                  );
+                }
+              })}
             </Stack>
 
             <div className={styles["margin-top-20"]}>
@@ -557,19 +583,31 @@ export default class Bbhc extends React.Component<IBbhcProps, IBbhcState> {
               </PrimaryButton>
             </div>
           </PivotItem>
-          <PivotItem headerText="Upload Excel File">
-            <input type="file" id={fileId} onChange={this.uploadFile}></input>
+          <PivotItem headerText="Clone Previous Year">
+            <input
+              type="file"
+              id={fileId}
+              style={{ visibility: "hidden" }}
+              onChange={this.uploadFile}
+            ></input>
 
             <Label htmlFor={fileId}>
-              <Label>Upload Providers List</Label>
+              <Label styles={{ root: { padding: "5px" } }}>Attach File</Label>
+              <div style={{ display: "flex" }}>
+                <Image
+                  styles={{ image: { padding: "5px" } }}
+                  src={require("./Attach.png")}
+                ></Image>
+                <Label>{this.state.fileName}</Label>
+              </div>
             </Label>
 
-            <PrimaryButton text="Clone" onClick={this.uploadToList.bind(this)} />
-
+            <PrimaryButton
+              text="Clone"
+              onClick={this.uploadToList.bind(this)}
+            />
           </PivotItem>
         </Pivot>
-
-
 
         {/*<div className={styles.container}>
           <div className={styles.row}>
