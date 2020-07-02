@@ -26,6 +26,12 @@ var alertify: any = require("../../../ExternalRef/JS/alertify.min.js");
 
 import { Image, IImageProps } from "office-ui-fabric-react/lib/Image";
 
+
+import {
+  TextField,
+  MaskedTextField,
+} from "office-ui-fabric-react/lib/TextField";
+
 import {
   Dropdown,
   DropdownMenuItemType,
@@ -43,16 +49,18 @@ export interface IBbhcState {
   destinationPath: any[];
   file: any;
   selectedPath: string;
+  notes: string;
   fileName: "";
 }
 
 export default class ProviderDocuments extends React.Component<
   IProviderDocumentsProps,
   IBbhcState
-> {
+  > {
   currentYear = new Date().getFullYear();
   rootFolder = "Providers Library";
   userName = "";
+  generalSubmission = 'general submission';
 
   constructor(props) {
     super(props);
@@ -65,60 +73,12 @@ export default class ProviderDocuments extends React.Component<
 
     alertify.set("notifier", "position", "top-right");
     this.state = {
-      folders: [
-        {
-          key: "Reports - Deaf and Hard of Hearing",
-          text: "Reports - Deaf and Hard of Hearing",
-        },
-        {
-          key: "Reports - Voter Registration",
-          text: "Reports - Voter Registration",
-        },
-        {
-          key: "Reports - Miscellaneous",
-          text: "Reports - Miscellaneous",
-        },
-        {
-          key: "Reports - Insurance and Licensing",
-          text: "Reports - Insurance and Licensing",
-        },
-        {
-          key: "Incidents and Complaints - Submissions",
-          text: "Incidents and Complaints - Submissions",
-        },
-        {
-          key: "Incidents and Complaints - Corrective Action Plans",
-          text: "Incidents and Complaints - Corrective Action Plans",
-        },
-        {
-          key: "Customer Satisfaction Surveys",
-          text: "Customer Satisfaction Surveys",
-        },
-        {
-          key: "Contract Monitoring - Submission for Desk Review",
-          text: "Contract Monitoring - Submission for Desk Review",
-        },
-        {
-          key: "Contract Monitoring - Corrective Action Plans and Follow-up",
-          text: "Contract Monitoring - Corrective Action Plans and Follow-up",
-        },
-        {
-          key: "Billing - Invoice",
-          text: "Billing - Invoice",
-        },
-        {
-          key: "Billing - Invoice Supportive Documentation",
-          text: "Billing - Invoice Supportive Documentation",
-        },
-        {
-          key: "Billing - Yearly Audits",
-          text: "Billing - Yearly Audits",
-        },
-      ],
+      folders: [],
       destinationPath: [],
       file: null,
       selectedPath: "",
       fileName: "",
+      notes: ""
     };
     this.getProviderMetaData();
   }
@@ -130,41 +90,48 @@ export default class ProviderDocuments extends React.Component<
       .items.select("Title")
       .filter(
         "substringof('" +
-          this.props.currentContext.pageContext.user.email.toLowerCase() +
-          "',Users)"
+        this.props.currentContext.pageContext.user.email.toLowerCase() +
+        "',Users)"
       )
       .get()
       .then((res) => {
         if (res.length > 0) {
           that.userName = res[0].Title;
-          // that.getFolders(res[0].Title);
+          that.getFolders(res[0].Title, '');
         } else {
           that.setState({ folders: [] });
         }
       });
   }
 
-  // getFolders(folderName) {
-  //   var url = this.sharedDocument + "/" + currentYear + "/" + folderName;
-  //   var folders = [];
-  //   var that = this;
-  //   var allFolders = that.state.folders;
-  //   sp.web
-  //     .getFolderByServerRelativePath(url)
-  //     .folders.get()
-  //     .then(function (data) {
-  //       if (data.length > 0) {
-  //         for (let index = 0; index < data.length; index++) {
-  //           folders.push({
-  //             key: folderName,
-  //             text: data[index].Name,
-  //           });
-  //         }
-  //         allFolders.splice(allFolders.length, 0, folders);
-  //         that.setState({ folders: allFolders });
-  //       }
-  //     });
-  // }
+  getFolders(folderName, displayName) {
+    var url = this.rootFolder + "/" + "FY " + (currentYear - 1) + "-" + currentYear + "/" + folderName;
+    var that = this;
+    var allFolders = that.state.folders;
+    sp.web
+      .getFolderByServerRelativePath(url)
+      .folders.get()
+      .then(function (data) {
+        if (data.length > 0) {
+          for (let index = 0; index < data.length; index++) {
+            var text = '';
+            if (displayName) {
+              text = displayName + ' - ' + data[index].Name.replace(' - Upload', '');
+            } else {
+              text = data[index].Name.replace(' - Upload', '');
+            }
+            if (data[index].Name.toLocaleLowerCase().indexOf('upload') > 0) {
+              allFolders.push({
+                key: folderName + '/' + data[index].Name,
+                text: text,
+              });
+            }
+            that.setState({ folders: allFolders });
+            that.getFolders(folderName + '/' + data[index].Name, text);
+          }
+        }
+      });
+  }
 
   fileUpload(e) {
     var files = e.target.files;
@@ -206,21 +173,28 @@ export default class ProviderDocuments extends React.Component<
     if (this.state.file) {
       var selectedPath = this.state.selectedPath;
       if (selectedPath) {
-        var folderName =
-          "FY " + (this.currentYear - 1) + "-" + this.currentYear;
-
-        var folderPath =
-          this.rootFolder + "/" + folderName + "/" + this.userName + "/";
-        var destinationPaths = selectedPath.split(" - ");
-        for (let index = 0; index < destinationPaths.length; index++) {
-          folderPath = folderPath + destinationPaths[index] + "/";
+        if (selectedPath.toLocaleLowerCase().indexOf(this.generalSubmission) > 0) {
+          if (!this.state.notes) {
+            alertify.error('Notes is required');
+            return;
+          }
         }
+        var folderName = "FY " + (this.currentYear - 1) + "-" + this.currentYear;
+        var folderPath = this.rootFolder + "/" + folderName + "/" + selectedPath;
         var that = this;
         sp.web
           .getFolderByServerRelativeUrl(folderPath)
           .files.add(that.state.file.name, that.state.file, true)
           .then(function (result) {
-            alertify.success("File uploaded successfully");
+            if (selectedPath.toLocaleLowerCase().indexOf(that.generalSubmission) > 0) {
+              result.file.listItemAllFields.get().then(function (fileData) {
+                sp.web.lists.getByTitle(that.rootFolder).items.getById(fileData.Id).update({ FileNotes: that.state.notes }).then(function () {
+                  alertify.success("File uploaded successfully");
+                })
+              });
+            } else {
+              alertify.success("File uploaded successfully");
+            }
           });
       } else {
         alertify.error("Select any folder");
@@ -228,6 +202,12 @@ export default class ProviderDocuments extends React.Component<
     } else {
       alertify.error("Select any file");
     }
+  }
+
+  inputChangeHandler(e) {
+    this.setState({
+      notes: e.target.value
+    });
   }
 
   public render(): React.ReactElement<IProviderDocumentsProps> {
@@ -271,7 +251,7 @@ export default class ProviderDocuments extends React.Component<
       event: React.FormEvent<HTMLDivElement>,
       item: IDropdownOption
     ): void => {
-      this.setState({ selectedPath: item.text });
+      this.setState({ selectedPath: item.key.toString() });
     };
 
     return (
@@ -279,26 +259,30 @@ export default class ProviderDocuments extends React.Component<
         <h2>Add File</h2>
         <div>
           {
-            // this.state.folders.map((folder, index) => {
-            //   return <Dropdown
-            //     placeholder="Select an option"
-            //     label="Folders"
-            //     options={folder}
-            //     onChange={dropdownChange}
-            //     id={index + ""}
-            //   />
-            // })
-
             <Dropdown
               placeholder="Select an option"
               label="Submission Types"
               options={this.state.folders}
               onChange={dropdownChange}
-              style={{ width: "500px" }}
+              style={{ width: "700px" }}
             />
+
           }
+
+          {
+            this.state.selectedPath.toLocaleLowerCase().indexOf(this.generalSubmission) > 0 ?
+              <TextField
+                label="Notes"
+                width="100px"
+                onChange={(e) => this.inputChangeHandler.call(this, e)}
+                value={this.state.notes}
+                name="notes"
+              ></TextField>
+              : ""
+          }
+
         </div>
-        [ style={{ visibility: "hidden" }}]
+
         <input
           type="file"
           name="UploadedFile"

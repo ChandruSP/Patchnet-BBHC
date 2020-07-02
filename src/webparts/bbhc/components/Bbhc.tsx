@@ -41,6 +41,8 @@ import {
   PivotLinkSize,
 } from "office-ui-fabric-react/lib/Pivot";
 
+import { ChoiceGroup, IChoiceGroupOption } from 'office-ui-fabric-react/lib/ChoiceGroup';
+
 import {
   PeoplePicker,
   PrincipalType,
@@ -64,26 +66,6 @@ const attachImageStyles = {
 
 const currentYear = new Date().getFullYear();
 const fileId = getId("anInput");
-const options: IDropdownOption[] = [
-  {
-    key: "fruitsHeader",
-    text: "Fruits",
-    itemType: DropdownMenuItemType.Header,
-  },
-  { key: "apple", text: "Apple" },
-  { key: "banana", text: "Banana" },
-  { key: "orange", text: "Orange", disabled: true },
-  { key: "grape", text: "Grape" },
-  { key: "divider_1", text: "-", itemType: DropdownMenuItemType.Divider },
-  {
-    key: "vegetablesHeader",
-    text: "Vegetables",
-    itemType: DropdownMenuItemType.Header,
-  },
-  { key: "broccoli", text: "Broccoli" },
-  { key: "carrot", text: "Carrot" },
-  { key: "lettuce", text: "Lettuce" },
-];
 
 import {
   TextField,
@@ -102,9 +84,8 @@ export interface IBbhcState {
     ProviderID: string;
     Title: string;
     LegalName: string;
-    // UsersId: {
-    //   results: any[];
-    // };
+    ContractId: string;
+    TemplateType: string;
     Users: string;
   };
   fileName: "";
@@ -115,6 +96,13 @@ export default class Bbhc extends React.Component<IBbhcProps, IBbhcState> {
   allUsers = [];
   fileObj = null;
   rootFolder = "Providers Library";
+  templateTypes = [{
+    key: "Contract Providers",
+    text: "Contract Providers",
+  }, {
+    key: "Agreement Providers",
+    text: "Agreement Providers",
+  }]
 
   constructor(prop: IBbhcProps, state: IBbhcState) {
     super(prop);
@@ -132,9 +120,8 @@ export default class Bbhc extends React.Component<IBbhcProps, IBbhcState> {
         ProviderID: "",
         Title: "",
         LegalName: "",
-        // UsersId: {
-        //   results: [],
-        // },
+        ContractId: "",
+        TemplateType: "Contract Providers",
         Users: "",
       },
       fileName: "",
@@ -273,6 +260,10 @@ export default class Bbhc extends React.Component<IBbhcProps, IBbhcState> {
       alertify.error("Provider name is required");
       return;
     }
+    if (!formData.ContractId) {
+      alertify.error("Contract Id is required");
+      return;
+    }
     if (!formData.LegalName) {
       alertify.error("Legal name is required");
       return;
@@ -321,7 +312,7 @@ export default class Bbhc extends React.Component<IBbhcProps, IBbhcState> {
     var folderName =
       reacthandler.rootFolder + "/" + "FY " + (year - 1) + "-" + year;
     sp.web.folders.add(folderName + "/" + providerName).then(function (data) {
-      reacthandler.getFolder("TemplateLibrary", providerName, year);
+      reacthandler.getFolder("TemplateLibrary/" + reacthandler.state.formData.TemplateType, providerName, year);
     });
     alertify.success("Provider is created");
   };
@@ -340,11 +331,10 @@ export default class Bbhc extends React.Component<IBbhcProps, IBbhcState> {
 
   processFolder(index, data, providerName, year) {
     var reacthandler = this;
-
     var folderName =
       reacthandler.rootFolder + "/" + "FY " + (year - 1) + "-" + year;
     var clonedUrl = data[index].ServerRelativeUrl.replace(
-      "TemplateLibrary",
+      "TemplateLibrary/" + this.state.formData.TemplateType,
       folderName + "/" + providerName
     );
     // reacthandler.createFolder(clonedUrl);
@@ -412,6 +402,12 @@ export default class Bbhc extends React.Component<IBbhcProps, IBbhcState> {
     this.setState({ AllUsers: allusers });
   }
 
+  templateChange(ev: React.FormEvent<HTMLInputElement>, option: IChoiceGroupOption): void {
+    var formData = this.state.formData;
+    formData.TemplateType = option.key;
+    this.setState({ formData: formData });
+  }
+
   public render(): React.ReactElement<IBbhcProps> {
     const stackTokens: IStackTokens = {
       childrenGap: 4,
@@ -473,7 +469,11 @@ export default class Bbhc extends React.Component<IBbhcProps, IBbhcState> {
       <div className={styles.bbhc}>
         <Pivot linkSize={PivotLinkSize.large}>
           <PivotItem headerText="Add Provider">
+
             <Stack {...columnstyle}>
+
+              <ChoiceGroup defaultSelectedKey={this.state.formData.TemplateType} options={this.templateTypes} onChange={this.templateChange.bind(this)} label="Template Type" />
+
               <TextField
                 label="Provider ID"
                 onChange={(e) => this.inputChangeHandler.call(this, e)}
@@ -491,12 +491,22 @@ export default class Bbhc extends React.Component<IBbhcProps, IBbhcState> {
               ></TextField>
 
               <TextField
+                label="Contract Id"
+                width="200px"
+                onChange={(e) => this.inputChangeHandler.call(this, e)}
+                value={this.state.formData.ContractId}
+                name="ContractId"
+              ></TextField>
+
+              <TextField
                 label="Legal Name"
                 width="200px"
                 onChange={(e) => this.inputChangeHandler.call(this, e)}
                 value={this.state.formData.LegalName}
                 name="LegalName"
               ></TextField>
+
+
 
               {/* <PeoplePicker
                 context={this.props.context}
@@ -596,7 +606,7 @@ export default class Bbhc extends React.Component<IBbhcProps, IBbhcState> {
               <div style={{ display: "flex" }}>
                 <Image
                   styles={{ image: { padding: "5px" } }}
-                  src={require("./Attach.png")}
+                  src={require("../Attach.png")}
                 ></Image>
                 <Label>{this.state.fileName}</Label>
               </div>
