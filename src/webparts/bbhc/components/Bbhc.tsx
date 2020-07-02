@@ -278,15 +278,17 @@ export default class Bbhc extends React.Component<IBbhcProps, IBbhcState> {
       }
     }
     this.setState({ formData: formData });
-    this.addToList(currentYear);
+    this.addToList(currentYear, this.state.formData);
   };
 
-  addToList(year) {
+  addToList(year, formData) {
+    var currentMonth = new Date().getMonth();
+    formData.ContractId = currentMonth >= 7 ? (formData.ContractId + '-' + currentYear) : (formData.ContractId + '-' + (currentYear - 1));
     sp.web.lists
       .getByTitle("ProviderDetails")
-      .items.add(this.state.formData)
+      .items.add(formData)
       .then((res) => {
-        this.createProvider(this.state.providerName, year);
+        this.createProvider(formData.Title, year, formData);
       });
   }
 
@@ -307,42 +309,42 @@ export default class Bbhc extends React.Component<IBbhcProps, IBbhcState> {
   //   alertify.success("Folder Cloned Successfully");
   // };
 
-  createProvider = (providerName, year) => {
+  createProvider = (providerName, year, formData) => {
     var reacthandler = this;
     var folderName =
       reacthandler.rootFolder + "/" + "FY " + (year - 1) + "-" + year;
     sp.web.folders.add(folderName + "/" + providerName).then(function (data) {
-      reacthandler.getFolder("TemplateLibrary/" + reacthandler.state.formData.TemplateType, providerName, year);
+      reacthandler.getFolder("TemplateLibrary/" + formData.TemplateType, providerName, year, formData);
     });
     alertify.success("Provider is created");
   };
 
-  getFolder = (folderPath, providerName, year) => {
+  getFolder = (folderPath, providerName, year, formData) => {
     var reacthandler = this;
     sp.web
       .getFolderByServerRelativePath(folderPath)
       .folders.get()
       .then(function (data) {
         if (data.length > 0) {
-          reacthandler.processFolder(0, data, providerName, year);
+          reacthandler.processFolder(0, data, providerName, year, formData);
         }
       });
   };
 
-  processFolder(index, data, providerName, year) {
+  processFolder(index, data, providerName, year, formData) {
     var reacthandler = this;
     var folderName =
       reacthandler.rootFolder + "/" + "FY " + (year - 1) + "-" + year;
     var clonedUrl = data[index].ServerRelativeUrl.replace(
-      "TemplateLibrary/" + this.state.formData.TemplateType,
+      "TemplateLibrary/" + formData.TemplateType,
       folderName + "/" + providerName
     );
     // reacthandler.createFolder(clonedUrl);
     sp.web.folders.add(clonedUrl).then((res) => {
-      reacthandler.getFolder(data[index].ServerRelativeUrl, providerName, year);
+      reacthandler.getFolder(data[index].ServerRelativeUrl, providerName, year, formData);
       index = index + 1;
       if (index < data.length) {
-        reacthandler.processFolder(index, data, providerName, year);
+        reacthandler.processFolder(index, data, providerName, year, formData);
       }
     });
   }
@@ -364,20 +366,27 @@ export default class Bbhc extends React.Component<IBbhcProps, IBbhcState> {
   uploadToList() {
     var reacthandler = this;
     if (!reacthandler.fileObj) {
-      alertify.console.error("Select any file to upload");
+      alertify.error("Select any file to upload");
       return;
     }
-    sp.web.folders
-      .add("Shared Documents/" + (currentYear + 1))
-      .then(function (data) {
-        ExcelRenderer(reacthandler.fileObj, (err, resp) => {
-          if (resp && resp.rows) {
-            for (let index = 0; index < resp.rows.length; index++) {
-              reacthandler.createProvider(resp.rows[index][0], currentYear + 1);
-            }
+    ExcelRenderer(reacthandler.fileObj, (err, resp) => {
+      if (resp && resp.rows) {
+        for (let index = 1; index < resp.rows.length; index++) {
+          let rowData = resp.rows[index];
+          var formdata = {
+            Title: rowData[0],
+            ProviderID: rowData[1],
+            ContractId: rowData[2],
+            LegalName: rowData[3],
+            Users: rowData[4],
+            TemplateType: rowData[5]
+          };
+          if (formdata.Title) {
+            reacthandler.addToList(currentYear, formdata);
           }
-        });
-      });
+        }
+      }
+    });
   }
 
   private _getPeoplePickerItems(items: any[]) {
