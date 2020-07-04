@@ -1,6 +1,7 @@
 import * as React from 'react';
 
 import styles from "./Providers.module.scss";
+import { SPHttpClient, ISPHttpClientOptions, SPHttpClientResponse } from '@microsoft/sp-http';
 
 import { Announced } from 'office-ui-fabric-react/lib/Announced';
 import { TextField, ITextFieldStyles } from 'office-ui-fabric-react/lib/TextField';
@@ -44,7 +45,9 @@ import "@pnp/sp/webs";
 import "@pnp/sp/folders";
 import "@pnp/sp/fields";
 import "@pnp/sp/files";
-
+import "@pnp/sp/security/web";
+import "@pnp/sp/site-users/web";
+import { PermissionKind } from "@pnp/sp/security";
 
 import {
   Dropdown,
@@ -128,10 +131,25 @@ export default class Providers extends React.Component<IProvidersProp, IDetailsL
   }, {
     key: "Agreement Providers",
     text: "Agreement Providers",
-  }]
+  }];
+
+  contributePermission = null;
+  readPermission = null;
+  currentUser = null;
+  userIds = [];
 
   constructor(props) {
     super(props);
+    var that = this;
+    sp.web.roleDefinitions.getByName('Read').get().then(function (res) {
+      that.readPermission = res.Id;
+    });
+
+    sp.web.roleDefinitions.getByName('Contribute').get().then(function (res) {
+      that.contributePermission = res.Id;
+    });
+
+    this.currentUser = sp.web.currentUser();
 
     this._selection = new Selection({
       onSelectionChanged: () => this.setState({ selectionDetails: this._getSelectionDetails() }),
@@ -282,10 +300,15 @@ export default class Providers extends React.Component<IProvidersProp, IDetailsL
       alertify.error("Legal name is required");
       return;
     }
+    var that = this;
     for (let index = 0; index < this.state.AllUsers.length; index++) {
       const user = this.state.AllUsers[index];
       if (/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(user)) {
         formData.Users = formData.Users + user + ";";
+        sp.web.siteUsers.getByEmail(user).get().then(function (data) {
+          that.userIds.push(data.Id);
+        });
+
       } else {
         alertify.error("User " + (index + 1) + " not valid");
         return;
@@ -340,7 +363,7 @@ export default class Providers extends React.Component<IProvidersProp, IDetailsL
       });
   };
 
-  processFolder(index, data, providerName, year, formData) {
+  async processFolder(index, data, providerName, year, formData) {
     var reacthandler = this;
     var folderName =
       reacthandler.rootFolder + "/" + "FY " + (year - 1) + "-" + year;
@@ -350,6 +373,29 @@ export default class Providers extends React.Component<IProvidersProp, IDetailsL
     );
     // reacthandler.createFolder(clonedUrl);
     sp.web.folders.add(clonedUrl).then((res) => {
+      var url = clonedUrl.replace(this.props.currentContext.pageContext.web.serverRelativeUrl + '/', '');
+      const spHttpClient: SPHttpClient = this.props.currentContext.spHttpClient;
+      var queryUrl = this.props.currentContext.pageContext.web.absoluteUrl + "/_api/web/GetFolderByServerRelativeUrl(" + "'" + url + "'" + ")/ListItemAllFields/breakroleinheritance(false)";
+      const spOpts: ISPHttpClientOptions = {};
+      spHttpClient.post(queryUrl, SPHttpClient.configurations.v1, spOpts).then((response: SPHttpClientResponse) => {
+        if (response.ok) {
+          var permission = reacthandler.readPermission;
+          var sdata = clonedUrl.split('/');
+          if (sdata[sdata.length - 1].toLocaleLowerCase().indexOf('upload') > 0) {
+            permission = reacthandler.contributePermission;
+          }
+          for (let index = 0; index < reacthandler.userIds.length; index++) {
+            const userId = reacthandler.userIds[index];
+            var postUrl = this.props.currentContext.pageContext.web.absoluteUrl + '/_api/web/GetFolderByServerRelativeUrl(' + "'" + url + "'" + ')/ListItemAllFields/roleassignments/addroleassignment(principalid=' + userId + ',roledefid=' + permission + ')';
+            spHttpClient.post(postUrl, SPHttpClient.configurations.v1, spOpts).then((response: SPHttpClientResponse) => {
+              if (response.ok) {
+              }
+            });
+          }
+
+        }
+      });
+
       reacthandler.getFolder(data[index].ServerRelativeUrl, providerName, year, formData);
       index = index + 1;
       if (index < data.length) {
@@ -591,7 +637,7 @@ export default class Providers extends React.Component<IProvidersProp, IDetailsL
           items={[
             {
               key: 'addRow',
-              text: 'Insert row',
+              text: 'Add',
               iconProps: { iconName: 'Add' },
               onClick: this._onAddRow.bind(this),
             },
