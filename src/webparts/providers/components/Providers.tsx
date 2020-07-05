@@ -138,6 +138,7 @@ export default class Providers extends React.Component<IProvidersProp, IDetailsL
   readPermission = null;
   currentUser = null;
   userDetails = [];
+  bbhcDomainName = "browardbehavioralhc.onmicrosoft.com";
 
   constructor(props) {
     super(props);
@@ -314,7 +315,8 @@ export default class Providers extends React.Component<IProvidersProp, IDetailsL
         sp.web.siteUsers.getByEmail(user).get().then(function (data) {
           that.userDetails.push({
             Id: data.Id,
-            Email: user
+            Email: user,
+            BBHCUser: user.indexOf(that.bbhcDomainName) > 0
           });
         });
       } else {
@@ -380,15 +382,38 @@ export default class Providers extends React.Component<IProvidersProp, IDetailsL
             permission = reacthandler.contributePermission;
           }
 
-          var postUrl = reacthandler.props.currentContext.pageContext.web.absoluteUrl + '/_api/web/GetFolderByServerRelativeUrl(' + "'" + url + "'" + ')/ListItemAllFields/roleassignments/removeroleassignment(principalid=' + userdata.Id + ',roledefid=' + permission + ')';
-          if (addpermission) {
-            postUrl = reacthandler.props.currentContext.pageContext.web.absoluteUrl + '/_api/web/GetFolderByServerRelativeUrl(' + "'" + url + "'" + ')/ListItemAllFields/roleassignments/addroleassignment(principalid=' + userdata.Id + ',roledefid=' + permission + ')';
+          if (user.indexOf(reacthandler.bbhcDomainName) > 0) {
+            sp.web.getFolderByServerRelativeUrl(data[index].ServerRelativeUrl).expand("ListItemAllFields/RoleAssignments/Member", "ListItemAllFields/RoleAssignments/RoleDefinitionBindings", "ListItemAllFields/RoleAssignments/Member/Users").get().then((resdata) => {
+              var roleAssignments = resdata["ListItemAllFields"].RoleAssignments;
+              for (let i = 0; i < roleAssignments.length; i++) {
+                const role = roleAssignments[i];
+                for (let j = 0; j < role.RoleDefinitionBindings.length; j++) {
+                  const definition = role.RoleDefinitionBindings[j];
+                  var postUrl = this.props.currentContext.pageContext.web.absoluteUrl + '/_api/web/GetFolderByServerRelativeUrl(' + "'" + url + "'" + ')/ListItemAllFields/roleassignments/removeroleassignment(principalid=' + userdata.Id + ',roledefid=' + definition.Id + ')';
+                  if (addpermission) {
+                    postUrl = reacthandler.props.currentContext.pageContext.web.absoluteUrl + '/_api/web/GetFolderByServerRelativeUrl(' + "'" + url + "'" + ')/ListItemAllFields/roleassignments/addroleassignment(principalid=' + userdata.Id + ',roledefid=' + permission + ')';
+                  }
+
+                  spHttpClient.post(postUrl, SPHttpClient.configurations.v1, spOpts).then((response: SPHttpClientResponse) => {
+                    if (response.ok) {
+                    }
+                  });
+                }
+              }
+            });
+          } else {
+            var postUrl = reacthandler.props.currentContext.pageContext.web.absoluteUrl + '/_api/web/GetFolderByServerRelativeUrl(' + "'" + url + "'" + ')/ListItemAllFields/roleassignments/removeroleassignment(principalid=' + userdata.Id + ',roledefid=' + permission + ')';
+            if (addpermission) {
+              postUrl = reacthandler.props.currentContext.pageContext.web.absoluteUrl + '/_api/web/GetFolderByServerRelativeUrl(' + "'" + url + "'" + ')/ListItemAllFields/roleassignments/addroleassignment(principalid=' + userdata.Id + ',roledefid=' + permission + ')';
+            }
+
+            spHttpClient.post(postUrl, SPHttpClient.configurations.v1, spOpts).then((response: SPHttpClientResponse) => {
+              if (response.ok) {
+              }
+            });
           }
 
-          spHttpClient.post(postUrl, SPHttpClient.configurations.v1, spOpts).then((response: SPHttpClientResponse) => {
-            if (response.ok) {
-            }
-          });
+
         }
       });
     });
@@ -414,8 +439,12 @@ export default class Providers extends React.Component<IProvidersProp, IDetailsL
           that.setState({ hideDialog: true });
         });
     } else {
-      var currentMonth = new Date().getMonth();
-      formData.ContractId = currentMonth >= 7 ? (formData.ContractId + '-' + currentYear) : (formData.ContractId + '-' + (currentYear - 1));
+      var currentMonth = new Date().getMonth() + 1;
+      var stryear = currentYear.toString().substr(2, 2);
+      if (currentMonth < 7) {
+        stryear = (currentYear - 1).toString().substr(2, 2);
+      }
+      formData.ContractId = formData.ContractId + '-' + stryear;
       formData.Logs = "Added on : " + new Date() + "\nAdded by : " + this.props.currentContext.pageContext.user.displayName;
       sp.web.lists
         .getByTitle("ProviderDetails")
@@ -430,14 +459,19 @@ export default class Providers extends React.Component<IProvidersProp, IDetailsL
 
   createProvider = (providerName, year, formData) => {
     var reacthandler = this;
-    var folderName =
-      reacthandler.rootFolder + "/" + "FY " + (year - 1) + "-" + year;
+    var currentMonth = new Date().getMonth() + 1;
+    var stryear = year + "-" + (year + 1);
+    if (currentMonth < 7) {
+      stryear = (year - 1) + "-" + year;
+    }
+
+    var folderName = reacthandler.rootFolder + "/" + "FY " + stryear;
+
     sp.web.folders.add(folderName + "/" + providerName).then(function (data) {
       reacthandler.getFolder("TemplateLibrary/" + formData.TemplateType, providerName, year, formData);
     });
     alertify.success("Provider is created");
     reacthandler.setState({ hideDialog: true });
-
   };
 
   getFolder = (folderPath, providerName, year, formData) => {
@@ -454,8 +488,12 @@ export default class Providers extends React.Component<IProvidersProp, IDetailsL
 
   async processFolder(index, data, providerName, year, formData) {
     var reacthandler = this;
-    var folderName =
-      reacthandler.rootFolder + "/" + "FY " + (year - 1) + "-" + year;
+    var currentMonth = new Date().getMonth() + 1;
+    var stryear = year + "-" + (year + 1);
+    if (currentMonth < 7) {
+      stryear = (year - 1) + "-" + year;
+    }
+    var folderName = reacthandler.rootFolder + "/" + "FY " + stryear;
     var clonedUrl = data[index].ServerRelativeUrl.replace(
       "TemplateLibrary/" + formData.TemplateType,
       folderName + "/" + providerName
@@ -474,27 +512,46 @@ export default class Providers extends React.Component<IProvidersProp, IDetailsL
             permission = reacthandler.contributePermission;
           }
           for (let index = 0; index < reacthandler.userDetails.length; index++) {
-            const userId = reacthandler.userDetails[index].Id;
+            const userData = reacthandler.userDetails[index];
 
-            var getPermissionUrl = this.props.currentContext.pageContext.web.absoluteUrl + "/_api/web/GetFolderByServerRelativeUrl(" + "'" + data[index].ServerRelativeUrl + "'" + ")/ListItemAllFields/roleassignments?$expand=Member,RoleDefinitionBindings";
+            // var getPermissionUrl = this.props.currentContext.pageContext.web.absoluteUrl + "/_api/web/GetFolderByServerRelativeUrl(" + "'" + data[index].ServerRelativeUrl + "'" + ")/ListItemAllFields/roleassignments?$expand=Member,RoleDefinitionBindings";
 
 
-            const requestHeaders: Headers = new Headers();
-            requestHeaders.append('Accept', 'application/json');
-            requestHeaders.append('Content-type', 'application/json');
-            
-            const opt: ISPHttpClientOptions = { headers: requestHeaders };
-            
-            spHttpClient.get(getPermissionUrl, SPHttpClient.configurations.v1, opt).then(function (permissions) {
-              debugger;
-            });
+            // const requestHeaders: Headers = new Headers();
+            // requestHeaders.append('Accept', 'application/json');
+            // requestHeaders.append('Content-type', 'application/json');
 
-            var postUrl = this.props.currentContext.pageContext.web.absoluteUrl + '/_api/web/GetFolderByServerRelativeUrl(' + "'" + url + "'" + ')/ListItemAllFields/roleassignments/addroleassignment(principalid=' + userId + ',roledefid=' + permission + ')';
+            // const opt: ISPHttpClientOptions = { headers: requestHeaders };
 
-            spHttpClient.post(postUrl, SPHttpClient.configurations.v1, spOpts).then((response: SPHttpClientResponse) => {
-              if (response.ok) {
-              }
-            });
+            // spHttpClient.get(getPermissionUrl, SPHttpClient.configurations.v1, opt).then(function (permissions) {
+            //   debugger;
+            // });
+
+            if (userData.BBHCUser) {
+              sp.web.getFolderByServerRelativeUrl(data[index].ServerRelativeUrl).expand("ListItemAllFields/RoleAssignments/Member", "ListItemAllFields/RoleAssignments/RoleDefinitionBindings", "ListItemAllFields/RoleAssignments/Member/Users").get().then((resdata) => {
+                var roleAssignments = resdata["ListItemAllFields"].RoleAssignments;
+                for (let i = 0; i < roleAssignments.length; i++) {
+                  const role = roleAssignments[i];
+                  for (let j = 0; j < role.RoleDefinitionBindings.length; j++) {
+                    const definition = role.RoleDefinitionBindings[j];
+                    var postUrl = this.props.currentContext.pageContext.web.absoluteUrl + '/_api/web/GetFolderByServerRelativeUrl(' + "'" + url + "'" + ')/ListItemAllFields/roleassignments/addroleassignment(principalid=' + userData.Id + ',roledefid=' + definition.Id + ')';
+                    spHttpClient.post(postUrl, SPHttpClient.configurations.v1, spOpts).then((response: SPHttpClientResponse) => {
+                      if (response.ok) {
+                      }
+                    });
+                  }
+                }
+              });
+            } else {
+              var postUrl = this.props.currentContext.pageContext.web.absoluteUrl + '/_api/web/GetFolderByServerRelativeUrl(' + "'" + url + "'" + ')/ListItemAllFields/roleassignments/addroleassignment(principalid=' + userData.Id + ',roledefid=' + permission + ')';
+
+              spHttpClient.post(postUrl, SPHttpClient.configurations.v1, spOpts).then((response: SPHttpClientResponse) => {
+                if (response.ok) {
+                }
+              });
+            }
+
+
 
           }
 
@@ -522,32 +579,6 @@ export default class Providers extends React.Component<IProvidersProp, IDetailsL
       reacthandler.fileObj = null;
     }
   };
-
-  uploadToList() {
-    var reacthandler = this;
-    if (!reacthandler.fileObj) {
-      alertify.error("Select any file to upload");
-      return;
-    }
-    ExcelRenderer(reacthandler.fileObj, (err, resp) => {
-      if (resp && resp.rows) {
-        for (let index = 1; index < resp.rows.length; index++) {
-          let rowData = resp.rows[index];
-          var formdata = {
-            Title: rowData[0],
-            ProviderID: rowData[1],
-            ContractId: rowData[2],
-            LegalName: rowData[3],
-            Users: rowData[4],
-            TemplateType: rowData[5]
-          };
-          if (formdata.Title) {
-            reacthandler.addToList(currentYear, formdata);
-          }
-        }
-      }
-    });
-  }
 
 
   userchange(event) {

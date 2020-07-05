@@ -15,6 +15,7 @@ import { IItemAddResult } from "@pnp/sp/items";
 
 import { PrimaryButton } from "@fluentui/react";
 import { Label } from "office-ui-fabric-react/lib/Label";
+import { Link } from 'office-ui-fabric-react/lib/Link';
 
 import { getId } from "office-ui-fabric-react/lib/Utilities";
 
@@ -53,6 +54,7 @@ export interface IBbhcState {
   selectedPath: string;
   notes: string;
   fileName: "";
+  previousyeardata: any[];
 }
 
 export default class ProviderDocuments extends React.Component<
@@ -80,7 +82,8 @@ export default class ProviderDocuments extends React.Component<
       file: null,
       selectedPath: "",
       fileName: "",
-      notes: ""
+      notes: "",
+      previousyeardata: []
     };
     this.getProviderMetaData();
   }
@@ -89,7 +92,7 @@ export default class ProviderDocuments extends React.Component<
     var that = this;
     sp.web.lists
       .getByTitle("ProviderDetails")
-      .items.select("Title")
+      .items.select("Title", "ContractId")
       .filter(
         "substringof('" +
         this.props.currentContext.pageContext.user.email.toLowerCase() +
@@ -98,6 +101,26 @@ export default class ProviderDocuments extends React.Component<
       .get()
       .then((res) => {
         if (res.length > 0) {
+          var currentMonth = new Date().getMonth() + 1;
+          var stryear = that.currentYear;
+          if (currentMonth < 7) {
+            stryear = that.currentYear - 1;
+          }
+          var previousyeardata = that.state.previousyeardata;
+          for (let j = 0; j < res.length; j++) {
+            const providerData = res[j];
+            var contract = providerData.ContractId.substr(providerData.ContractId.length - 2, 2);
+            if (contract != stryear.toString().substr(2, 2)) {
+              var nextyear = parseInt(contract) + 1;
+              var currentyearprefix = that.currentYear.toString().substr(0, 2);
+              previousyeardata.push({
+                Title: providerData.Title,
+                URL: that.props.siteUrl + "/" + this.rootFolder + "/FY " + (currentyearprefix + contract) + "-" + (currentyearprefix + nextyear) + "/" + providerData.Title
+              });
+            }
+          }
+          that.setState({ previousyeardata: previousyeardata });
+
           that.userName = res[0].Title;
           that.getFolders(res[0].Title, '');
         } else {
@@ -107,7 +130,12 @@ export default class ProviderDocuments extends React.Component<
   }
 
   getFolders(folderName, displayName) {
-    var url = this.rootFolder + "/" + "FY " + (currentYear - 1) + "-" + currentYear + "/" + folderName;
+    var currentMonth = new Date().getMonth() + 1;
+    var stryear = this.currentYear + "-" + (this.currentYear + 1);
+    if (currentMonth < 7) {
+      stryear = (this.currentYear - 1) + "-" + this.currentYear;
+    }
+    var url = this.rootFolder + "/" + "FY " + stryear + "/" + folderName;
     var that = this;
     var allFolders = that.state.folders;
     sp.web
@@ -181,7 +209,13 @@ export default class ProviderDocuments extends React.Component<
             return;
           }
         }
-        var folderName = "FY " + (this.currentYear - 1) + "-" + this.currentYear;
+        var currentMonth = new Date().getMonth() + 1;
+        var stryear = this.currentYear + "-" + (this.currentYear + 1);
+        if (currentMonth < 7) {
+          stryear = (this.currentYear - 1) + "-" + this.currentYear;
+        }
+        var folderName = "FY " + stryear;
+
         var folderPath = this.rootFolder + "/" + folderName + "/" + selectedPath;
         var that = this;
         sp.web
@@ -331,6 +365,15 @@ export default class ProviderDocuments extends React.Component<
             <Label>{this.state.fileName}</Label>
           </div>
         </Label>
+
+        <div>
+          {
+            this.state.previousyeardata.map((provider) => {
+              return <div><Link href={provider.URL} target="_blank">{provider.Title}</Link><br></br></div>
+            })
+          }
+        </div>
+
         <PrimaryButton text="Upload" onClick={this.uploadFile.bind(this)} />
       </div>
     );
