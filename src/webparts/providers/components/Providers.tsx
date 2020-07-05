@@ -137,7 +137,7 @@ export default class Providers extends React.Component<IProvidersProp, IDetailsL
   contributePermission = null;
   readPermission = null;
   currentUser = null;
-  userIds = [];
+  userDetails = [];
 
   constructor(props) {
     super(props);
@@ -312,7 +312,10 @@ export default class Providers extends React.Component<IProvidersProp, IDetailsL
       if (/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(user)) {
         formData.Users = formData.Users + user + ";";
         sp.web.siteUsers.getByEmail(user).get().then(function (data) {
-          that.userIds.push(data.Id);
+          that.userDetails.push({
+            Id: data.Id,
+            Email: user
+          });
         });
       } else {
         alertify.error("User " + (index + 1) + " not valid");
@@ -341,6 +344,7 @@ export default class Providers extends React.Component<IProvidersProp, IDetailsL
         }
       }
     }
+
     this.setState({ formData: formData });
     this.addToList(currentYear, this.state.formData);
   };
@@ -469,13 +473,29 @@ export default class Providers extends React.Component<IProvidersProp, IDetailsL
           if (sdata[sdata.length - 1].toLocaleLowerCase().indexOf('upload') > 0) {
             permission = reacthandler.contributePermission;
           }
-          for (let index = 0; index < reacthandler.userIds.length; index++) {
-            const userId = reacthandler.userIds[index];
+          for (let index = 0; index < reacthandler.userDetails.length; index++) {
+            const userId = reacthandler.userDetails[index].Id;
+
+            var getPermissionUrl = this.props.currentContext.pageContext.web.absoluteUrl + "/_api/web/GetFolderByServerRelativeUrl(" + "'" + data[index].ServerRelativeUrl + "'" + ")/ListItemAllFields/roleassignments?$expand=Member,RoleDefinitionBindings";
+
+
+            const requestHeaders: Headers = new Headers();
+            requestHeaders.append('Accept', 'application/json');
+            requestHeaders.append('Content-type', 'application/json');
+            
+            const opt: ISPHttpClientOptions = { headers: requestHeaders };
+            
+            spHttpClient.get(getPermissionUrl, SPHttpClient.configurations.v1, opt).then(function (permissions) {
+              debugger;
+            });
+
             var postUrl = this.props.currentContext.pageContext.web.absoluteUrl + '/_api/web/GetFolderByServerRelativeUrl(' + "'" + url + "'" + ')/ListItemAllFields/roleassignments/addroleassignment(principalid=' + userId + ',roledefid=' + permission + ')';
+
             spHttpClient.post(postUrl, SPHttpClient.configurations.v1, spOpts).then((response: SPHttpClientResponse) => {
               if (response.ok) {
               }
             });
+
           }
 
         }
