@@ -114,15 +114,17 @@ export default class ProviderDocuments extends React.Component<
               var nextyear = parseInt(contract) + 1;
               var currentyearprefix = that.currentYear.toString().substr(0, 2);
               previousyeardata.push({
-                Title: providerData.Title,
+                Title: "FY " + (currentyearprefix + contract) + "-" + (currentyearprefix + nextyear),
                 URL: that.props.siteUrl + "/" + this.rootFolder + "/FY " + (currentyearprefix + contract) + "-" + (currentyearprefix + nextyear) + "/" + providerData.Title
               });
+            } else {
+              that.userName = providerData.Title;
+              that.getFolders(providerData.Title, '');
             }
           }
           that.setState({ previousyeardata: previousyeardata });
 
-          that.userName = res[0].Title;
-          that.getFolders(res[0].Title, '');
+
         } else {
           that.setState({ folders: [] });
         }

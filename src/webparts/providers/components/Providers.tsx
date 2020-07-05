@@ -138,7 +138,6 @@ export default class Providers extends React.Component<IProvidersProp, IDetailsL
   readPermission = null;
   currentUser = null;
   userDetails = [];
-  bbhcDomainName = "browardbehavioralhc.onmicrosoft.com";
 
   constructor(props) {
     super(props);
@@ -315,8 +314,7 @@ export default class Providers extends React.Component<IProvidersProp, IDetailsL
         sp.web.siteUsers.getByEmail(user).get().then(function (data) {
           that.userDetails.push({
             Id: data.Id,
-            Email: user,
-            BBHCUser: user.indexOf(that.bbhcDomainName) > 0
+            Email: user
           });
         });
       } else {
@@ -382,36 +380,32 @@ export default class Providers extends React.Component<IProvidersProp, IDetailsL
             permission = reacthandler.contributePermission;
           }
 
-          if (user.indexOf(reacthandler.bbhcDomainName) > 0) {
-            sp.web.getFolderByServerRelativeUrl(data[index].ServerRelativeUrl).expand("ListItemAllFields/RoleAssignments/Member", "ListItemAllFields/RoleAssignments/RoleDefinitionBindings", "ListItemAllFields/RoleAssignments/Member/Users").get().then((resdata) => {
-              var roleAssignments = resdata["ListItemAllFields"].RoleAssignments;
-              for (let i = 0; i < roleAssignments.length; i++) {
-                const role = roleAssignments[i];
-                for (let j = 0; j < role.RoleDefinitionBindings.length; j++) {
-                  const definition = role.RoleDefinitionBindings[j];
-                  var postUrl = this.props.currentContext.pageContext.web.absoluteUrl + '/_api/web/GetFolderByServerRelativeUrl(' + "'" + url + "'" + ')/ListItemAllFields/roleassignments/removeroleassignment(principalid=' + userdata.Id + ',roledefid=' + definition.Id + ')';
-                  if (addpermission) {
-                    postUrl = reacthandler.props.currentContext.pageContext.web.absoluteUrl + '/_api/web/GetFolderByServerRelativeUrl(' + "'" + url + "'" + ')/ListItemAllFields/roleassignments/addroleassignment(principalid=' + userdata.Id + ',roledefid=' + permission + ')';
-                  }
-
-                  spHttpClient.post(postUrl, SPHttpClient.configurations.v1, spOpts).then((response: SPHttpClientResponse) => {
-                    if (response.ok) {
-                    }
-                  });
+          sp.web.getFolderByServerRelativeUrl(data[index].ServerRelativeUrl).expand("ListItemAllFields/RoleAssignments/Member", "ListItemAllFields/RoleAssignments/RoleDefinitionBindings", "ListItemAllFields/RoleAssignments/Member/Users").get().then((resdata) => {
+            var roleAssignments = resdata["ListItemAllFields"].RoleAssignments;
+            for (let i = 0; i < roleAssignments.length; i++) {
+              const role = roleAssignments[i];
+              for (let j = 0; j < role.RoleDefinitionBindings.length; j++) {
+                const definition = role.RoleDefinitionBindings[j];
+                var postUrl = this.props.currentContext.pageContext.web.absoluteUrl + '/_api/web/GetFolderByServerRelativeUrl(' + "'" + url + "'" + ')/ListItemAllFields/roleassignments/removeroleassignment(principalid=' + role.Member.Id + ',roledefid=' + definition.Id + ')';
+                if (addpermission) {
+                  postUrl = reacthandler.props.currentContext.pageContext.web.absoluteUrl + '/_api/web/GetFolderByServerRelativeUrl(' + "'" + url + "'" + ')/ListItemAllFields/roleassignments/addroleassignment(principalid=' + role.Member.Id + ',roledefid=' + definition.Id + ')';
                 }
-              }
-            });
-          } else {
-            var postUrl = reacthandler.props.currentContext.pageContext.web.absoluteUrl + '/_api/web/GetFolderByServerRelativeUrl(' + "'" + url + "'" + ')/ListItemAllFields/roleassignments/removeroleassignment(principalid=' + userdata.Id + ',roledefid=' + permission + ')';
-            if (addpermission) {
-              postUrl = reacthandler.props.currentContext.pageContext.web.absoluteUrl + '/_api/web/GetFolderByServerRelativeUrl(' + "'" + url + "'" + ')/ListItemAllFields/roleassignments/addroleassignment(principalid=' + userdata.Id + ',roledefid=' + permission + ')';
-            }
 
-            spHttpClient.post(postUrl, SPHttpClient.configurations.v1, spOpts).then((response: SPHttpClientResponse) => {
-              if (response.ok) {
+                spHttpClient.post(postUrl, SPHttpClient.configurations.v1, spOpts).then((response: SPHttpClientResponse) => {
+                  if (response.ok) {
+                  }
+                });
               }
-            });
+            }
+          });
+          var postUrl = reacthandler.props.currentContext.pageContext.web.absoluteUrl + '/_api/web/GetFolderByServerRelativeUrl(' + "'" + url + "'" + ')/ListItemAllFields/roleassignments/removeroleassignment(principalid=' + userdata.Id + ',roledefid=' + permission + ')';
+          if (addpermission) {
+            postUrl = reacthandler.props.currentContext.pageContext.web.absoluteUrl + '/_api/web/GetFolderByServerRelativeUrl(' + "'" + url + "'" + ')/ListItemAllFields/roleassignments/addroleassignment(principalid=' + userdata.Id + ',roledefid=' + permission + ')';
           }
+          spHttpClient.post(postUrl, SPHttpClient.configurations.v1, spOpts).then((response: SPHttpClientResponse) => {
+            if (response.ok) {
+            }
+          });
 
 
         }
@@ -527,31 +521,27 @@ export default class Providers extends React.Component<IProvidersProp, IDetailsL
             //   debugger;
             // });
 
-            if (userData.BBHCUser) {
-              sp.web.getFolderByServerRelativeUrl(data[index].ServerRelativeUrl).expand("ListItemAllFields/RoleAssignments/Member", "ListItemAllFields/RoleAssignments/RoleDefinitionBindings", "ListItemAllFields/RoleAssignments/Member/Users").get().then((resdata) => {
-                var roleAssignments = resdata["ListItemAllFields"].RoleAssignments;
-                for (let i = 0; i < roleAssignments.length; i++) {
-                  const role = roleAssignments[i];
-                  for (let j = 0; j < role.RoleDefinitionBindings.length; j++) {
-                    const definition = role.RoleDefinitionBindings[j];
-                    var postUrl = this.props.currentContext.pageContext.web.absoluteUrl + '/_api/web/GetFolderByServerRelativeUrl(' + "'" + url + "'" + ')/ListItemAllFields/roleassignments/addroleassignment(principalid=' + userData.Id + ',roledefid=' + definition.Id + ')';
-                    spHttpClient.post(postUrl, SPHttpClient.configurations.v1, spOpts).then((response: SPHttpClientResponse) => {
-                      if (response.ok) {
-                      }
-                    });
-                  }
+            sp.web.getFolderByServerRelativeUrl(data[index].ServerRelativeUrl).expand("ListItemAllFields/RoleAssignments/Member", "ListItemAllFields/RoleAssignments/RoleDefinitionBindings", "ListItemAllFields/RoleAssignments/Member/Users").get().then((resdata) => {
+              var roleAssignments = resdata["ListItemAllFields"].RoleAssignments;
+              for (let i = 0; i < roleAssignments.length; i++) {
+                const role = roleAssignments[i];
+                for (let j = 0; j < role.RoleDefinitionBindings.length; j++) {
+                  const definition = role.RoleDefinitionBindings[j];
+                  var bbhcpostUrl = this.props.currentContext.pageContext.web.absoluteUrl + '/_api/web/GetFolderByServerRelativeUrl(' + "'" + url + "'" + ')/ListItemAllFields/roleassignments/addroleassignment(principalid=' + role.Member.Id + ',roledefid=' + definition.Id + ')';
+                  spHttpClient.post(bbhcpostUrl, SPHttpClient.configurations.v1, spOpts).then((response: SPHttpClientResponse) => {
+                    if (response.ok) {
+                    }
+                  });
                 }
-              });
-            } else {
-              var postUrl = this.props.currentContext.pageContext.web.absoluteUrl + '/_api/web/GetFolderByServerRelativeUrl(' + "'" + url + "'" + ')/ListItemAllFields/roleassignments/addroleassignment(principalid=' + userData.Id + ',roledefid=' + permission + ')';
+              }
+            });
 
-              spHttpClient.post(postUrl, SPHttpClient.configurations.v1, spOpts).then((response: SPHttpClientResponse) => {
-                if (response.ok) {
-                }
-              });
-            }
+            var postUrl = this.props.currentContext.pageContext.web.absoluteUrl + '/_api/web/GetFolderByServerRelativeUrl(' + "'" + url + "'" + ')/ListItemAllFields/roleassignments/addroleassignment(principalid=' + userData.Id + ',roledefid=' + permission + ')';
 
-
+            spHttpClient.post(postUrl, SPHttpClient.configurations.v1, spOpts).then((response: SPHttpClientResponse) => {
+              if (response.ok) {
+              }
+            });
 
           }
 
