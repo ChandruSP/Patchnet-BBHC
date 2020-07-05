@@ -94,7 +94,8 @@ export interface IDetailsListBasicExampleState {
   hideDialog: boolean;
   hideDeleteDialog: boolean;
 
-  providerName: "";
+  editUsers: string;
+  providerName: string;
   folders: IDropdownOption[];
   subFolders: IDropdownOption[];
   cols: [];
@@ -164,13 +165,13 @@ export default class Providers extends React.Component<IProvidersProp, IDetailsL
       { key: 'column5', name: 'Contract Id', fieldName: 'ContractId', minWidth: 100, maxWidth: 200, isResizable: true },
     ];
 
-    var that = this;
     that.state = {
       items: [],
       allItems: [],
       selectionDetails: '',
       hideDialog: true,
       hideDeleteDialog: true,
+      editUsers: "",
 
       providerName: "",
       folders: [],
@@ -191,11 +192,16 @@ export default class Providers extends React.Component<IProvidersProp, IDetailsL
       },
       fileName: "",
     };
+    this.loadTableData();
+  }
 
+  loadTableData() {
+    var that = this;
     sp.web.lists
       .getByTitle("ProviderDetails")
       .items.select("Title", "LegalName", "ProviderID", "TemplateType", "ContractId", "Id", "Users", "IsDeleted", "Logs").get().then(function (data) {
         var allItems = that.state.items;
+        allItems = [];
         for (let index = 0; index < data.length; index++) {
           const element = data[index];
           if (!element.IsDeleted) {
@@ -262,7 +268,7 @@ export default class Providers extends React.Component<IProvidersProp, IDetailsL
         allUsers.push(susers[index]);
       }
     }
-    this.setState({ AllUsers: allUsers, formData: formData, hideDialog: false });
+    this.setState({ editUsers: data[0].Users, AllUsers: allUsers, formData: formData, hideDialog: false });
   }
 
   hideDialog() {
@@ -308,17 +314,91 @@ export default class Providers extends React.Component<IProvidersProp, IDetailsL
         sp.web.siteUsers.getByEmail(user).get().then(function (data) {
           that.userIds.push(data.Id);
         });
-
       } else {
         alertify.error("User " + (index + 1) + " not valid");
         return;
+      }
+    }
+
+    if (this.state.editUsers) {
+      var existingUsers = this.state.editUsers.split(';');
+      var newUsers = this.state.formData.Users.split(';');
+      for (let index = 0; index < newUsers.length; index++) {
+        if (newUsers[index]) {
+          var exist = existingUsers.filter(c => c == newUsers[index]);
+          if (exist.length == 0) {
+            that.setpermissionfornewuser(that.rootFolder + "/" + "FY " + (currentYear - 1) + "-" + currentYear, newUsers[index], true);
+          }
+        }
+      }
+
+      for (let j = 0; j < existingUsers.length; j++) {
+        if (existingUsers[j]) {
+          var removeuser = newUsers.filter(c => c == existingUsers[j]);
+          if (removeuser.length == 0) {
+            that.setpermissionfornewuser(that.rootFolder + "/" + "FY " + (currentYear - 1) + "-" + currentYear, existingUsers[j], false);
+          }
+        }
       }
     }
     this.setState({ formData: formData });
     this.addToList(currentYear, this.state.formData);
   };
 
+
+  setpermissionfornewuser(folderPath, user, addpermission) {
+    var reacthandler = this;
+    sp.web
+      .getFolderByServerRelativePath(folderPath)
+      .folders.get()
+      .then(function (data) {
+        if (data.length > 0) {
+          reacthandler.setpermission(0, data, user, addpermission);
+        }
+      });
+  }
+
+
+  setpermission(index, data, user, addpermission) {
+    var reacthandler = this;
+    var clonedUrl = data[index].ServerRelativeUrl;
+    var url = clonedUrl.replace(this.props.currentContext.pageContext.web.serverRelativeUrl + '/', '');
+    const spHttpClient: SPHttpClient = this.props.currentContext.spHttpClient;
+    var queryUrl = this.props.currentContext.pageContext.web.absoluteUrl + "/_api/web/GetFolderByServerRelativeUrl(" + "'" + url + "'" + ")/ListItemAllFields/breakroleinheritance(false)";
+    const spOpts: ISPHttpClientOptions = {};
+
+    sp.web.siteUsers.getByEmail(user).get().then(function (userdata) {
+      spHttpClient.post(queryUrl, SPHttpClient.configurations.v1, spOpts).then((response: SPHttpClientResponse) => {
+        if (response.ok) {
+          var permission = reacthandler.readPermission;
+          var sdata = clonedUrl.split('/');
+          if (sdata[sdata.length - 1].toLocaleLowerCase().indexOf('upload') > 0) {
+            permission = reacthandler.contributePermission;
+          }
+
+          var postUrl = reacthandler.props.currentContext.pageContext.web.absoluteUrl + '/_api/web/GetFolderByServerRelativeUrl(' + "'" + url + "'" + ')/ListItemAllFields/roleassignments/removeroleassignment(principalid=' + userdata.Id + ',roledefid=' + permission + ')';
+          if (addpermission) {
+            postUrl = reacthandler.props.currentContext.pageContext.web.absoluteUrl + '/_api/web/GetFolderByServerRelativeUrl(' + "'" + url + "'" + ')/ListItemAllFields/roleassignments/addroleassignment(principalid=' + userdata.Id + ',roledefid=' + permission + ')';
+          }
+
+          spHttpClient.post(postUrl, SPHttpClient.configurations.v1, spOpts).then((response: SPHttpClientResponse) => {
+            if (response.ok) {
+            }
+          });
+        }
+      });
+    });
+    reacthandler.setpermissionfornewuser(data[index].ServerRelativeUrl, user, addpermission);
+    index = index + 1;
+    if (index < data.length) {
+      reacthandler.setpermission(index, data, user, addpermission);
+    }
+  }
+
+
+
   addToList(year, formData) {
+    var that = this;
     if (formData.Id > 0) {
       formData.Logs = formData.Logs + "\n\nUpdated on : " + new Date() + "\nUpdated by : " + this.props.currentContext.pageContext.user.displayName;
       sp.web.lists
@@ -326,6 +406,8 @@ export default class Providers extends React.Component<IProvidersProp, IDetailsL
         .items.getById(formData.Id).update(formData)
         .then((res) => {
           alertify.success("Provider updated");
+          that.loadTableData();
+          that.setState({ hideDialog: true });
         });
     } else {
       var currentMonth = new Date().getMonth();
@@ -335,7 +417,8 @@ export default class Providers extends React.Component<IProvidersProp, IDetailsL
         .getByTitle("ProviderDetails")
         .items.add(formData)
         .then((res) => {
-          this.createProvider(formData.Title, year, formData);
+          that.createProvider(formData.Title, year, formData);
+          that.loadTableData();
         });
     }
   }
@@ -349,6 +432,8 @@ export default class Providers extends React.Component<IProvidersProp, IDetailsL
       reacthandler.getFolder("TemplateLibrary/" + formData.TemplateType, providerName, year, formData);
     });
     alertify.success("Provider is created");
+    reacthandler.setState({ hideDialog: true });
+
   };
 
   getFolder = (folderPath, providerName, year, formData) => {
@@ -484,7 +569,7 @@ export default class Providers extends React.Component<IProvidersProp, IDetailsL
       Logs: ""
     };
     allUsers = [""];
-    this.setState({ AllUsers: allUsers, formData: formData, hideDialog: false });
+    this.setState({ editUsers: "", AllUsers: allUsers, formData: formData, hideDialog: false });
   }
 
   _onDeleteRow() {

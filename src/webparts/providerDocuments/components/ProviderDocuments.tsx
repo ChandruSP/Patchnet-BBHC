@@ -25,6 +25,8 @@ import "../../../ExternalRef/CSS/alertify.min.css";
 var alertify: any = require("../../../ExternalRef/JS/alertify.min.js");
 
 import { Image, IImageProps } from "office-ui-fabric-react/lib/Image";
+import "@pnp/sp/sputilities";
+import { IEmailProperties } from "@pnp/sp/sputilities";
 
 
 import {
@@ -189,6 +191,35 @@ export default class ProviderDocuments extends React.Component<
             if (selectedPath.toLocaleLowerCase().indexOf(that.generalSubmission) > 0) {
               result.file.listItemAllFields.get().then(function (fileData) {
                 sp.web.lists.getByTitle(that.rootFolder).items.getById(fileData.Id).update({ FileNotes: that.state.notes }).then(function () {
+
+                  sp.web.lists
+                    .getByTitle("EmailConfig")
+                    .items
+                    .get()
+                    .then((res) => {
+                      var filepath = that.props.currentContext.pageContext.web.absoluteUrl + '/' + folderPath + that.state.file.name;
+                      var to = res[0].To.split(';');
+                      var cc = [];
+                      if (res[0].CC) {
+                        cc = res[0].CC.split(';');
+                      }
+                      var bcc = [];
+                      if (res[0].BCC) {
+                        bcc = res[0].BCC.split(';');
+                      }
+                      const emailProps: IEmailProperties = {
+                        To: to,
+                        CC: cc,
+                        BCC: bcc,
+                        Subject: res[0].Subject,
+                        Body: "New file is uploaded in the general submission folder for the <a href='" + filepath + "'>" + that.userName + "</a> provider.\n\nNotes : " + that.state.notes,
+                        AdditionalHeaders: {
+                          "content-type": "text/html"
+                        }
+                      };
+                      sp.utility.sendEmail(emailProps);
+                    });
+
                   alertify.success("File uploaded successfully");
                 })
               });
