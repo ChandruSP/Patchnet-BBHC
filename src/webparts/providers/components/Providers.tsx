@@ -141,6 +141,14 @@ export default class Providers extends React.Component<IProvidersProp, IDetailsL
 
   constructor(props) {
     super(props);
+
+    sp.setup({
+      sp: {
+        baseUrl: this.props.siteUrl,
+      },
+    });
+
+
     var that = this;
     sp.web.roleDefinitions.getByName('Read').get().then(function (res) {
       that.readPermission = res.Id;
