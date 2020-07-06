@@ -272,7 +272,7 @@ export default class Providers extends React.Component<IProvidersProp, IDetailsL
   }
 
   hideDialog() {
-    location.reload();
+    this.setState({ hideDialog: true });
   }
 
   providerNameChange = (event) => {
@@ -326,11 +326,17 @@ export default class Providers extends React.Component<IProvidersProp, IDetailsL
     if (this.state.editUsers) {
       var existingUsers = this.state.editUsers.split(';');
       var newUsers = this.state.formData.Users.split(';');
+
+      var contract = this.state.formData.ContractId.substr(this.state.formData.ContractId.length - 2, 2);
+      var nextyear = parseInt(contract) + 1;
+      var currentyearprefix = currentYear.toString().substr(0, 2);
+      var yearfolder = "FY " + (currentyearprefix + contract) + "-" + (currentyearprefix + nextyear) + '/' + this.state.formData.Title;
+
       for (let index = 0; index < newUsers.length; index++) {
         if (newUsers[index]) {
           var exist = existingUsers.filter(c => c == newUsers[index]);
           if (exist.length == 0) {
-            that.setpermissionfornewuser(that.rootFolder + "/" + "FY " + (currentYear - 1) + "-" + currentYear, newUsers[index], true);
+            that.setpermissionfornewuser(that.rootFolder + "/" + yearfolder, newUsers[index], true);
           }
         }
       }
@@ -339,7 +345,7 @@ export default class Providers extends React.Component<IProvidersProp, IDetailsL
         if (existingUsers[j]) {
           var removeuser = newUsers.filter(c => c == existingUsers[j]);
           if (removeuser.length == 0) {
-            that.setpermissionfornewuser(that.rootFolder + "/" + "FY " + (currentYear - 1) + "-" + currentYear, existingUsers[j], false);
+            that.setpermissionfornewuser(that.rootFolder + "/" + yearfolder, existingUsers[j], false);
           }
         }
       }
@@ -380,24 +386,24 @@ export default class Providers extends React.Component<IProvidersProp, IDetailsL
             permission = reacthandler.contributePermission;
           }
 
-          sp.web.getFolderByServerRelativeUrl(data[index].ServerRelativeUrl).expand("ListItemAllFields/RoleAssignments/Member", "ListItemAllFields/RoleAssignments/RoleDefinitionBindings", "ListItemAllFields/RoleAssignments/Member/Users").get().then((resdata) => {
-            var roleAssignments = resdata["ListItemAllFields"].RoleAssignments;
-            for (let i = 0; i < roleAssignments.length; i++) {
-              const role = roleAssignments[i];
-              for (let j = 0; j < role.RoleDefinitionBindings.length; j++) {
-                const definition = role.RoleDefinitionBindings[j];
-                var postUrl = this.props.currentContext.pageContext.web.absoluteUrl + '/_api/web/GetFolderByServerRelativeUrl(' + "'" + url + "'" + ')/ListItemAllFields/roleassignments/removeroleassignment(principalid=' + role.Member.Id + ',roledefid=' + definition.Id + ')';
-                if (addpermission) {
-                  postUrl = reacthandler.props.currentContext.pageContext.web.absoluteUrl + '/_api/web/GetFolderByServerRelativeUrl(' + "'" + url + "'" + ')/ListItemAllFields/roleassignments/addroleassignment(principalid=' + role.Member.Id + ',roledefid=' + definition.Id + ')';
-                }
+          // sp.web.getFolderByServerRelativeUrl(data[index].ServerRelativeUrl).expand("ListItemAllFields/RoleAssignments/Member", "ListItemAllFields/RoleAssignments/RoleDefinitionBindings", "ListItemAllFields/RoleAssignments/Member/Users").get().then((resdata) => {
+          //   var roleAssignments = resdata["ListItemAllFields"].RoleAssignments;
+          //   for (let i = 0; i < roleAssignments.length; i++) {
+          //     const role = roleAssignments[i];
+          //     for (let j = 0; j < role.RoleDefinitionBindings.length; j++) {
+          //       const definition = role.RoleDefinitionBindings[j];
+          //       var postUrl = this.props.currentContext.pageContext.web.absoluteUrl + '/_api/web/GetFolderByServerRelativeUrl(' + "'" + url + "'" + ')/ListItemAllFields/roleassignments/removeroleassignment(principalid=' + role.Member.Id + ',roledefid=' + definition.Id + ')';
+          //       if (addpermission) {
+          //         postUrl = reacthandler.props.currentContext.pageContext.web.absoluteUrl + '/_api/web/GetFolderByServerRelativeUrl(' + "'" + url + "'" + ')/ListItemAllFields/roleassignments/addroleassignment(principalid=' + role.Member.Id + ',roledefid=' + definition.Id + ')';
+          //       }
 
-                spHttpClient.post(postUrl, SPHttpClient.configurations.v1, spOpts).then((response: SPHttpClientResponse) => {
-                  if (response.ok) {
-                  }
-                });
-              }
-            }
-          });
+          //       spHttpClient.post(postUrl, SPHttpClient.configurations.v1, spOpts).then((response: SPHttpClientResponse) => {
+          //         if (response.ok) {
+          //         }
+          //       });
+          //     }
+          //   }
+          // });
           var postUrl = reacthandler.props.currentContext.pageContext.web.absoluteUrl + '/_api/web/GetFolderByServerRelativeUrl(' + "'" + url + "'" + ')/ListItemAllFields/roleassignments/removeroleassignment(principalid=' + userdata.Id + ',roledefid=' + permission + ')';
           if (addpermission) {
             postUrl = reacthandler.props.currentContext.pageContext.web.absoluteUrl + '/_api/web/GetFolderByServerRelativeUrl(' + "'" + url + "'" + ')/ListItemAllFields/roleassignments/addroleassignment(principalid=' + userdata.Id + ',roledefid=' + permission + ')';
@@ -637,14 +643,27 @@ export default class Providers extends React.Component<IProvidersProp, IDetailsL
       .getByTitle("ProviderDetails")
       .items.getById(formData.Id).update(formData)
       .then((res) => {
+
+        var contract = formData.ContractId.substr(formData.ContractId.length - 2, 2);
+        var nextyear = parseInt(contract) + 1;
+        var currentyearprefix = currentYear.toString().substr(0, 2);
+        var yearfolder = "FY " + (currentyearprefix + contract) + "-" + (currentyearprefix + nextyear);
+
+        var users = formData.Users.split(';');
+        for (let j = 0; j < users.length; j++) {
+          const user = users[j];
+          if (user) {
+            that.setpermissionfornewuser(that.rootFolder + "/" + yearfolder, user, false);
+          }
+        }
+
         index = index + 1;
         if (index < items.length) {
           that.updateDeleteTag(index, items);
         } else {
           alertify.success("Provider deleted successfully");
-          setTimeout(() => {
-            location.reload();
-          }, 1000);
+          that.loadTableData();
+          that.setState({ hideDialog: true });
         }
       });
   }
