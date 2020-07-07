@@ -52,9 +52,11 @@ export interface IBbhcState {
   destinationPath: any[];
   file: any;
   selectedPath: string;
+  selectedProvider: string;
   notes: string;
   fileName: "";
   previousyeardata: any[];
+  allProviders: any[];
 }
 
 export default class ProviderDocuments extends React.Component<
@@ -63,7 +65,7 @@ export default class ProviderDocuments extends React.Component<
   > {
   currentYear = new Date().getFullYear();
   rootFolder = "Providers Library";
-  userName = "";
+  templateLibrary = "TemplateLibrary";
   generalSubmission = 'general submission';
 
   constructor(props) {
@@ -81,9 +83,11 @@ export default class ProviderDocuments extends React.Component<
       destinationPath: [],
       file: null,
       selectedPath: "",
+      selectedProvider: "",
       fileName: "",
       notes: "",
-      previousyeardata: []
+      previousyeardata: [],
+      allProviders: []
     };
     this.getProviderMetaData();
   }
@@ -92,7 +96,7 @@ export default class ProviderDocuments extends React.Component<
     var that = this;
     sp.web.lists
       .getByTitle("ProviderDetails")
-      .items.select("Title", "ContractId")
+      .items.select("Title", "ContractId", "TemplateType")
       .filter(
         "substringof('" +
         this.props.currentContext.pageContext.user.email.toLowerCase() +
@@ -107,6 +111,9 @@ export default class ProviderDocuments extends React.Component<
             stryear = that.currentYear - 1;
           }
           var previousyeardata = that.state.previousyeardata;
+          var allProviders = that.state.allProviders;
+
+          var dataLoaded = false;
           for (let j = 0; j < res.length; j++) {
             const providerData = res[j];
             var contract = providerData.ContractId.substr(providerData.ContractId.length - 2, 2);
@@ -118,26 +125,28 @@ export default class ProviderDocuments extends React.Component<
                 URL: that.props.siteUrl + "/" + this.rootFolder + "/FY " + (currentyearprefix + contract) + "-" + (currentyearprefix + nextyear) + "/" + providerData.Title
               });
             } else {
-              that.userName = providerData.Title;
-              that.getFolders(providerData.Title, '');
+              if (!dataLoaded) {
+                dataLoaded = true;
+                that.getFolders('', providerData.TemplateType, '');
+              }
+              allProviders.push({
+                key: providerData.Title,
+                text: providerData.Title
+              });
             }
           }
-          that.setState({ previousyeardata: previousyeardata });
-
-
+          that.setState({ previousyeardata: previousyeardata, allProviders: allProviders });
         } else {
           that.setState({ folders: [] });
         }
       });
   }
 
-  getFolders(folderName, displayName) {
-    var currentMonth = new Date().getMonth() + 1;
-    var stryear = this.currentYear + "-" + (this.currentYear + 1);
-    if (currentMonth < 7) {
-      stryear = (this.currentYear - 1) + "-" + this.currentYear;
+  getFolders(folderName, templateType, displayName) {
+    var url = this.templateLibrary + "/" + templateType;
+    if (folderName) {
+      url = url + "/" + folderName;
     }
-    var url = this.rootFolder + "/" + "FY " + stryear + "/" + folderName;
     var that = this;
     var allFolders = that.state.folders;
     sp.web
@@ -154,12 +163,12 @@ export default class ProviderDocuments extends React.Component<
             }
             if (data[index].Name.toLocaleLowerCase().indexOf('upload') > 0) {
               allFolders.push({
-                key: folderName + '/' + data[index].Name,
+                key: folderName + '/' + text,
                 text: text,
               });
             }
             that.setState({ folders: allFolders });
-            that.getFolders(folderName + '/' + data[index].Name, text);
+            that.getFolders(folderName + '/' + data[index].Name, templateType, text);
           }
         }
       });
@@ -203,6 +212,10 @@ export default class ProviderDocuments extends React.Component<
 
   uploadFile() {
     if (this.state.file) {
+      if (!this.state.selectedProvider) {
+        alertify.error("Select any provider");
+        return;
+      }
       var selectedPath = this.state.selectedPath;
       if (selectedPath) {
         if (selectedPath.toLocaleLowerCase().indexOf(this.generalSubmission) > 0) {
@@ -216,7 +229,7 @@ export default class ProviderDocuments extends React.Component<
         if (currentMonth < 7) {
           stryear = (this.currentYear - 1) + "-" + this.currentYear;
         }
-        var folderName = "FY " + stryear;
+        var folderName = "FY " + stryear + "/" + this.state.selectedProvider;
 
         var folderPath = this.rootFolder + "/" + folderName + "/" + selectedPath;
         var that = this;
@@ -248,7 +261,7 @@ export default class ProviderDocuments extends React.Component<
                         CC: cc,
                         BCC: bcc,
                         Subject: res[0].Subject,
-                        Body: "New file is uploaded in the general submission folder for the <a href='" + filepath + "'>" + that.userName + "</a> provider.\n\nNotes : " + that.state.notes,
+                        Body: "New file is uploaded in the general submission folder for the <a href='" + filepath + "'>" + that.state.selectedProvider + "</a> provider.\n\nNotes : " + that.state.notes,
                         AdditionalHeaders: {
                           "content-type": "text/html"
                         }
@@ -321,10 +334,29 @@ export default class ProviderDocuments extends React.Component<
       this.setState({ selectedPath: item.key.toString() });
     };
 
+    const providerChange = (
+      event: React.FormEvent<HTMLDivElement>,
+      item: IDropdownOption
+    ): void => {
+      this.setState({ selectedProvider: item.key.toString() });
+    };
+
+
     return (
       <div>
         <h2>Add File</h2>
         <div>
+
+          {
+            <Dropdown
+              placeholder="Select an provider"
+              label="Providers"
+              options={this.state.allProviders}
+              onChange={providerChange}
+              style={{ width: "700px" }}
+            />
+          }
+
           {
             <Dropdown
               placeholder="Select an option"

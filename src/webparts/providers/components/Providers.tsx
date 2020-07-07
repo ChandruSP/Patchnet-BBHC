@@ -506,6 +506,9 @@ export default class Providers extends React.Component<IProvidersProp, IDetailsL
       "TemplateLibrary/" + formData.TemplateType,
       folderName + "/" + providerName
     );
+
+    clonedUrl = clonedUrl.replace(' - Upload', '');
+
     // reacthandler.createFolder(clonedUrl);
     sp.web.folders.add(clonedUrl).then((res) => {
       var url = clonedUrl.replace(this.props.currentContext.pageContext.web.serverRelativeUrl + '/', '');
