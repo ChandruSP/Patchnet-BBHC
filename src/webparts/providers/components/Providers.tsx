@@ -167,8 +167,16 @@ export default class Providers extends React.Component<IProvidersProp, IDetailsL
 
     this._columns = [
       // { key: 'column1', name: 'Id', fieldName: 'Id', minWidth: 100, maxWidth: 200, isResizable: true },
-      { key: 'column1', name: 'Provider Name', fieldName: 'Title', minWidth: 100, maxWidth: 200, isResizable: true },
-      { key: 'column2', name: 'Legal Name', fieldName: 'LegalName', minWidth: 100, maxWidth: 200, isResizable: true },
+      {
+        key: 'column1', name: 'Provider Name', fieldName: 'Title', minWidth: 100, maxWidth: 200, isResizable: true, isSorted: true,
+        isSortedDescending: false,
+        onColumnClick: this._onColumnClick
+      },
+      {
+        key: 'column2', name: 'Legal Name', fieldName: 'LegalName', minWidth: 100, maxWidth: 200, isResizable: true, isSorted: true,
+        isSortedDescending: false,
+        onColumnClick: this._onColumnClick
+      },
       { key: 'column3', name: 'Provider ID', fieldName: 'ProviderID', minWidth: 100, maxWidth: 200, isResizable: true },
       { key: 'column4', name: 'Template Type', fieldName: 'TemplateType', minWidth: 100, maxWidth: 200, isResizable: true },
       { key: 'column5', name: 'Contract Id', fieldName: 'ContractId', minWidth: 100, maxWidth: 200, isResizable: true },
@@ -336,11 +344,6 @@ export default class Providers extends React.Component<IProvidersProp, IDetailsL
       var existingUsers = this.state.editUsers.split(';');
       var newUsers = this.state.formData.Users.split(';');
 
-      var contract = this.state.formData.ContractId.substr(this.state.formData.ContractId.length - 2, 2);
-      var nextyear = parseInt(contract) + 1;
-      var currentyearprefix = currentYear.toString().substr(0, 2);
-      var yearfolder = "FY " + (currentyearprefix + contract) + "-" + (currentyearprefix + nextyear) + '/' + this.state.formData.Title;
-
       for (let index = 0; index < newUsers.length; index++) {
         if (newUsers[index]) {
           var exist = existingUsers.filter(c => c == newUsers[index]);
@@ -354,7 +357,7 @@ export default class Providers extends React.Component<IProvidersProp, IDetailsL
         if (existingUsers[j]) {
           var removeuser = newUsers.filter(c => c == existingUsers[j]);
           if (removeuser.length == 0) {
-            that.setpermissionfornewuser(that.rootFolder + "/" + yearfolder, existingUsers[j], false);
+            that.setpermissionfornewuser("TemplateLibrary/" + that.state.formData.TemplateType, existingUsers[j], false);
           }
         }
       }
@@ -383,6 +386,18 @@ export default class Providers extends React.Component<IProvidersProp, IDetailsL
     var clonedUrl = data[index].ServerRelativeUrl;
     var url = clonedUrl.replace(this.props.currentContext.pageContext.web.serverRelativeUrl + '/', '');
     const spHttpClient: SPHttpClient = this.props.currentContext.spHttpClient;
+
+    var contract = this.state.formData.ContractId.substr(this.state.formData.ContractId.length - 2, 2);
+    var nextyear = parseInt(contract) + 1;
+    var currentyearprefix = currentYear.toString().substr(0, 2);
+    var yearfolder = "FY " + (currentyearprefix + contract) + "-" + (currentyearprefix + nextyear) + '/' + this.state.formData.Title;
+
+    var providerFolder = reacthandler.rootFolder + "/" + yearfolder;
+    var mainTemplateFolder = "TemplateLibrary/" + reacthandler.state.formData.TemplateType
+    url = url.replace(mainTemplateFolder, providerFolder);
+
+    url = url.replace(' - Upload', '');
+
     var queryUrl = this.props.currentContext.pageContext.web.absoluteUrl + "/_api/web/GetFolderByServerRelativeUrl(" + "'" + url + "'" + ")/ListItemAllFields/breakroleinheritance(false)";
     const spOpts: ISPHttpClientOptions = {};
 
@@ -638,16 +653,11 @@ export default class Providers extends React.Component<IProvidersProp, IDetailsL
       .items.getById(formData.Id).update(formData)
       .then((res) => {
 
-        var contract = formData.ContractId.substr(formData.ContractId.length - 2, 2);
-        var nextyear = parseInt(contract) + 1;
-        var currentyearprefix = currentYear.toString().substr(0, 2);
-        var yearfolder = "FY " + (currentyearprefix + contract) + "-" + (currentyearprefix + nextyear);
-
         var users = formData.Users.split(';');
         for (let j = 0; j < users.length; j++) {
           const user = users[j];
           if (user) {
-            that.setpermissionfornewuser(that.rootFolder + "/" + yearfolder, user, false);
+            that.setpermissionfornewuser("TemplateLibrary/" + that.state.formData.TemplateType, user, false);
           }
         }
 
@@ -657,9 +667,37 @@ export default class Providers extends React.Component<IProvidersProp, IDetailsL
         } else {
           alertify.success("Provider deleted successfully");
           that.loadTableData();
-          that.setState({ hideDialog: true });
+          that.setState({ hideDeleteDialog: true });
         }
       });
+  }
+
+
+
+  _onColumnClick = (ev: React.MouseEvent<HTMLElement>, column: IColumn): void => {
+    const newColumns: IColumn[] = this._columns.slice();
+    const currColumn: IColumn = newColumns.filter(currCol => column.key === currCol.key)[0];
+    newColumns.forEach((newCol: IColumn) => {
+      if (newCol === currColumn) {
+        currColumn.isSortedDescending = !currColumn.isSortedDescending;
+        currColumn.isSorted = true;
+
+      } else {
+        newCol.isSorted = false;
+        newCol.isSortedDescending = true;
+      }
+    });
+    var items = this.state.items;
+    const newItems = this._copyAndSort(items, currColumn.fieldName!, currColumn.isSortedDescending);
+    this.setState({
+      items: newItems,
+    });
+  }
+
+
+  _copyAndSort<T>(items: T[], columnKey: string, isSortedDescending?: boolean): T[] {
+    const key = columnKey as keyof T;
+    return items.slice(0).sort((a: T, b: T) => ((isSortedDescending ? a[key] < b[key] : a[key] > b[key]) ? 1 : -1));
   }
 
   public render(): React.ReactElement<IProvidersProp> {
