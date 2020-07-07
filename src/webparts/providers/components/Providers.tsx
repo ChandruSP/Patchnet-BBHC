@@ -128,10 +128,10 @@ export default class Providers extends React.Component<IProvidersProp, IDetailsL
   rootFolder = "Providers Library";
   templateTypes = [{
     key: "Contract Providers",
-    text: "Contract Providers",
+    text: "Contract Provider",
   }, {
     key: "Agreement Providers",
-    text: "Agreement Providers",
+    text: "Agreement Provider",
   }];
 
   contributePermission = null;
@@ -148,6 +148,7 @@ export default class Providers extends React.Component<IProvidersProp, IDetailsL
       },
     });
 
+    alertify.set("notifier", "position", "top-right");
 
     var that = this;
     sp.web.roleDefinitions.getByName('Read').get().then(function (res) {
@@ -344,7 +345,7 @@ export default class Providers extends React.Component<IProvidersProp, IDetailsL
         if (newUsers[index]) {
           var exist = existingUsers.filter(c => c == newUsers[index]);
           if (exist.length == 0) {
-            that.setpermissionfornewuser(that.rootFolder + "/" + yearfolder, newUsers[index], true);
+            that.setpermissionfornewuser("TemplateLibrary/" + that.state.formData.TemplateType, newUsers[index], true);
           }
         }
       }
@@ -394,24 +395,6 @@ export default class Providers extends React.Component<IProvidersProp, IDetailsL
             permission = reacthandler.contributePermission;
           }
 
-          // sp.web.getFolderByServerRelativeUrl(data[index].ServerRelativeUrl).expand("ListItemAllFields/RoleAssignments/Member", "ListItemAllFields/RoleAssignments/RoleDefinitionBindings", "ListItemAllFields/RoleAssignments/Member/Users").get().then((resdata) => {
-          //   var roleAssignments = resdata["ListItemAllFields"].RoleAssignments;
-          //   for (let i = 0; i < roleAssignments.length; i++) {
-          //     const role = roleAssignments[i];
-          //     for (let j = 0; j < role.RoleDefinitionBindings.length; j++) {
-          //       const definition = role.RoleDefinitionBindings[j];
-          //       var postUrl = this.props.currentContext.pageContext.web.absoluteUrl + '/_api/web/GetFolderByServerRelativeUrl(' + "'" + url + "'" + ')/ListItemAllFields/roleassignments/removeroleassignment(principalid=' + role.Member.Id + ',roledefid=' + definition.Id + ')';
-          //       if (addpermission) {
-          //         postUrl = reacthandler.props.currentContext.pageContext.web.absoluteUrl + '/_api/web/GetFolderByServerRelativeUrl(' + "'" + url + "'" + ')/ListItemAllFields/roleassignments/addroleassignment(principalid=' + role.Member.Id + ',roledefid=' + definition.Id + ')';
-          //       }
-
-          //       spHttpClient.post(postUrl, SPHttpClient.configurations.v1, spOpts).then((response: SPHttpClientResponse) => {
-          //         if (response.ok) {
-          //         }
-          //       });
-          //     }
-          //   }
-          // });
           var postUrl = reacthandler.props.currentContext.pageContext.web.absoluteUrl + '/_api/web/GetFolderByServerRelativeUrl(' + "'" + url + "'" + ')/ListItemAllFields/roleassignments/removeroleassignment(principalid=' + userdata.Id + ',roledefid=' + permission + ')';
           if (addpermission) {
             postUrl = reacthandler.props.currentContext.pageContext.web.absoluteUrl + '/_api/web/GetFolderByServerRelativeUrl(' + "'" + url + "'" + ')/ListItemAllFields/roleassignments/addroleassignment(principalid=' + userdata.Id + ',roledefid=' + permission + ')';
@@ -518,7 +501,7 @@ export default class Providers extends React.Component<IProvidersProp, IDetailsL
       spHttpClient.post(queryUrl, SPHttpClient.configurations.v1, spOpts).then((response: SPHttpClientResponse) => {
         if (response.ok) {
           var permission = reacthandler.readPermission;
-          var sdata = clonedUrl.split('/');
+          var sdata = data[index].ServerRelativeUrl.split('/');
           if (sdata[sdata.length - 1].toLocaleLowerCase().indexOf('upload') > 0) {
             permission = reacthandler.contributePermission;
           }
@@ -729,8 +712,30 @@ export default class Providers extends React.Component<IProvidersProp, IDetailsL
       },
       styles: {
         root: {
-          width: 300,
+          width: 30,
           paddingTop: 28,
+        },
+      },
+    };
+
+
+    const btnstackTokens: IStackTokens = {
+      childrenGap: 4,
+    };
+    const btnstackStyles: Partial<IStackStyles> = {
+      root: {
+        width: 600,
+      },
+    };
+
+    const btncolumnstyle: Partial<IStackProps> = {
+      tokens: {
+        childrenGap: 4,
+      },
+      styles: {
+        root: {
+          width: 100,
+          paddingTop: 10,
         },
       },
     };
@@ -782,7 +787,7 @@ export default class Providers extends React.Component<IProvidersProp, IDetailsL
       type: DialogType.normal,
       title: 'Delete',
       closeButtonAriaLabel: 'Close',
-      subText: 'Do you want to these providers?',
+      subText: 'Do you want to delete the selected Provider(s)?',
     };
 
     return (
@@ -810,7 +815,7 @@ export default class Providers extends React.Component<IProvidersProp, IDetailsL
           <Announced message={this.state.selectionDetails} />
           <TextField
             className={exampleChildClass}
-            label="Filter by name:"
+            label="Filter by provider name:"
             onChange={this._onFilter.bind(this)}
             styles={textFieldStyles}
           />
@@ -833,53 +838,54 @@ export default class Providers extends React.Component<IProvidersProp, IDetailsL
         </Fabric>
 
 
-        <Dialog hidden={this.state.hideDialog} modalProps={modelProps}>
+        <Dialog hidden={this.state.hideDialog} modalProps={modelProps} minWidth="400px">
 
           <Stack {...columnstyle}>
 
-            <ChoiceGroup defaultSelectedKey={this.state.formData.TemplateType} options={this.templateTypes} onChange={this.templateChange.bind(this)} label="Template Type" />
+            {
+              this.state.formData.Id == 0 ? <div><ChoiceGroup defaultSelectedKey={this.state.formData.TemplateType} options={this.templateTypes} onChange={this.templateChange.bind(this)} label="Provider Type" />
 
-            <TextField
-              label="Provider ID"
-              onChange={(e) => this.inputChangeHandler.call(this, e)}
-              width="100px"
-              name="ProviderID"
-              value={this.state.formData.ProviderID}
-              required
-            ></TextField>
+                <TextField
+                  label="Provider ID"
+                  onChange={(e) => this.inputChangeHandler.call(this, e)}
+                  width="100px"
+                  name="ProviderID"
+                  value={this.state.formData.ProviderID}
+                  required
+                ></TextField>
 
-            <TextField
-              label="Provider Name"
-              onChange={this.providerNameChange}
-              width="100px"
-              name="Title"
-              value={this.state.formData.Title}
-              required
-            ></TextField>
+                <TextField
+                  label="Provider Name"
+                  onChange={this.providerNameChange}
+                  width="100px"
+                  name="Title"
+                  value={this.state.formData.Title}
+                  required
+                ></TextField>
 
-            <TextField
-              label="Contract Id"
-              width="200px"
-              onChange={(e) => this.inputChangeHandler.call(this, e)}
-              value={this.state.formData.ContractId}
-              name="ContractId"
-              required
-            ></TextField>
+                <TextField
+                  label="Contract ID"
+                  width="200px"
+                  onChange={(e) => this.inputChangeHandler.call(this, e)}
+                  value={this.state.formData.ContractId}
+                  name="ContractId"
+                  required
+                ></TextField>
 
-            <TextField
-              label="Legal Name"
-              width="200px"
-              onChange={(e) => this.inputChangeHandler.call(this, e)}
-              value={this.state.formData.LegalName}
-              name="LegalName"
-              required
-            ></TextField>
-
-
-
+                <TextField
+                  label="Legal Name"
+                  width="200px"
+                  onChange={(e) => this.inputChangeHandler.call(this, e)}
+                  value={this.state.formData.LegalName}
+                  name="LegalName"
+                  required
+                ></TextField>
+              </div>
+                : ''
+            }
 
             {this.state.AllUsers.map((user, index) => {
-              if (index == this.state.AllUsers.length - 1) {
+              if (this.state.AllUsers.length == 1) {
                 return (
                   <div>
                     <Stack
@@ -932,6 +938,15 @@ export default class Providers extends React.Component<IProvidersProp, IDetailsL
 
                       <Stack {...iconcolumnstyle}>
                         <IconButton
+                          iconProps={{ iconName: "Add" }}
+                          title="Add User"
+                          ariaLabel="Add"
+                          onClick={this.newuser.bind(this)}
+                        />
+                      </Stack>
+
+                      <Stack {...iconcolumnstyle}>
+                        <IconButton
                           iconProps={{ iconName: "Cancel" }}
                           title="Remove User"
                           ariaLabel="Cancel"
@@ -945,12 +960,12 @@ export default class Providers extends React.Component<IProvidersProp, IDetailsL
             })}
           </Stack>
 
-          <DialogFooter>
+          <div className={styles.margintop}>
             <PrimaryButton onClick={this.processInputProvider}>
-              Add a New Provider
-              </PrimaryButton>
+              {this.state.formData.Id == 0 ? "Add New Provider" : "Submit"}
+            </PrimaryButton>
             <DefaultButton onClick={this.hideDialog.bind(this)} text="Close" />
-          </DialogFooter>
+          </div>
 
         </Dialog>
 
