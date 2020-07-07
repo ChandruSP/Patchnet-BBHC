@@ -845,6 +845,7 @@ export default class Providers extends React.Component<IProvidersProp, IDetailsL
               width="100px"
               name="ProviderID"
               value={this.state.formData.ProviderID}
+              required
             ></TextField>
 
             <TextField
@@ -853,6 +854,7 @@ export default class Providers extends React.Component<IProvidersProp, IDetailsL
               width="100px"
               name="Title"
               value={this.state.formData.Title}
+              required
             ></TextField>
 
             <TextField
@@ -861,6 +863,7 @@ export default class Providers extends React.Component<IProvidersProp, IDetailsL
               onChange={(e) => this.inputChangeHandler.call(this, e)}
               value={this.state.formData.ContractId}
               name="ContractId"
+              required
             ></TextField>
 
             <TextField
@@ -869,6 +872,7 @@ export default class Providers extends React.Component<IProvidersProp, IDetailsL
               onChange={(e) => this.inputChangeHandler.call(this, e)}
               value={this.state.formData.LegalName}
               name="LegalName"
+              required
             ></TextField>
 
 
@@ -891,6 +895,7 @@ export default class Providers extends React.Component<IProvidersProp, IDetailsL
                           onChange={(e) => this.userchange.call(this, e)}
                           value={user}
                           name="userName"
+                          required
                         ></TextField>
                       </Stack>
 
@@ -921,6 +926,7 @@ export default class Providers extends React.Component<IProvidersProp, IDetailsL
                           onChange={(e) => this.userchange.call(this, e)}
                           value={user}
                           name="userName"
+                          required
                         ></TextField>
                       </Stack>
 

@@ -67,6 +67,8 @@ export default class ProviderDocuments extends React.Component<
   rootFolder = "Providers Library";
   templateLibrary = "TemplateLibrary";
   generalSubmission = 'general submission';
+  generalSubmissionChanged = false;
+
 
   constructor(props) {
     super(props);
@@ -327,10 +329,29 @@ export default class ProviderDocuments extends React.Component<
     //   }
     // };
 
+
     const dropdownChange = (
       event: React.FormEvent<HTMLDivElement>,
       item: IDropdownOption
     ): void => {
+      if (!this.generalSubmissionChanged) {
+        this.generalSubmissionChanged = true;
+        var folders = this.state.folders;
+        var gindex = -1;
+        for (let index = 0; index < folders.length; index++) {
+          const folder = folders[index];
+          if (folder.text == "General Submissions") {
+            gindex = index;
+            break;
+          }
+        }
+        if (gindex >= 0) {
+          var data = folders[gindex];
+          folders.splice(gindex, 1);
+          folders.splice(folders.length, 0, data);
+          this.setState({ folders: folders });
+        }
+      }
       this.setState({ selectedPath: item.key.toString() });
     };
 
