@@ -349,6 +349,7 @@ export default class Providers extends React.Component<IProvidersProp, IDetailsL
           var exist = existingUsers.filter(c => c == newUsers[index]);
           if (exist.length == 0) {
             that.setpermissionfornewuser("TemplateLibrary/" + that.state.formData.TemplateType, newUsers[index], true);
+            that.setpermissionformaintemplate("TemplateLibrary/" + this.state.formData.TemplateType, newUsers[index]);
           }
         }
       }
@@ -359,6 +360,13 @@ export default class Providers extends React.Component<IProvidersProp, IDetailsL
           if (removeuser.length == 0) {
             that.setpermissionfornewuser("TemplateLibrary/" + that.state.formData.TemplateType, existingUsers[j], false);
           }
+        }
+      }
+    } else {
+      for (let index = 0; index < this.state.AllUsers.length; index++) {
+        const user = this.state.AllUsers[index];
+        if (user) {
+          that.setpermissionformaintemplate("TemplateLibrary/" + this.state.formData.TemplateType, user);
         }
       }
     }
@@ -430,7 +438,38 @@ export default class Providers extends React.Component<IProvidersProp, IDetailsL
     }
   }
 
+  setpermissionformaintemplate(url, useremail) {
+    var that = this;
+    sp.web
+      .getFolderByServerRelativePath(url)
+      .folders.get()
+      .then(function (data) {
+        for (let index = 0; index < data.length; index++) {
+          that.setmaintemplatepermission(data[index].ServerRelativeUrl, useremail);
+          that.setpermissionformaintemplate(data[index].ServerRelativeUrl, useremail);
+        }
+      });
+  }
 
+  setmaintemplatepermission(mainurl, usermail) {
+    var reacthandler = this;
+    var url = mainurl.replace(this.props.currentContext.pageContext.web.serverRelativeUrl + '/', '');
+    const spHttpClient: SPHttpClient = this.props.currentContext.spHttpClient;
+    var queryUrl = this.props.currentContext.pageContext.web.absoluteUrl + "/_api/web/GetFolderByServerRelativeUrl(" + "'" + url + "'" + ")/ListItemAllFields/breakroleinheritance(false)";
+    const spOpts: ISPHttpClientOptions = {};
+    spHttpClient.post(queryUrl, SPHttpClient.configurations.v1, spOpts).then((response: SPHttpClientResponse) => {
+      if (response.ok) {
+        var permission = reacthandler.readPermission;
+        sp.web.siteUsers.getByEmail(usermail).get().then(function (userdata) {
+          var postUrl = reacthandler.props.currentContext.pageContext.web.absoluteUrl + '/_api/web/GetFolderByServerRelativeUrl(' + "'" + url + "'" + ')/ListItemAllFields/roleassignments/addroleassignment(principalid=' + userdata.Id + ',roledefid=' + permission + ')';
+          spHttpClient.post(postUrl, SPHttpClient.configurations.v1, spOpts).then((response: SPHttpClientResponse) => {
+            if (response.ok) {
+            }
+          });
+        });
+      }
+    })
+  }
 
   addToList(year, formData) {
     var that = this;
