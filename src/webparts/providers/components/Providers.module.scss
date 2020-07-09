@@ -1,4 +1,4 @@
-@import '~office-ui-fabric-react/dist/sass/References.scss';
+@import "~office-ui-fabric-react/dist/sass/References.scss";
 
 .providers {
   .container {
@@ -51,7 +51,8 @@
     // Basic Button
     outline: transparent;
     position: relative;
-    font-family: "Segoe UI WestEuropean","Segoe UI",-apple-system,BlinkMacSystemFont,Roboto,"Helvetica Neue",sans-serif;
+    font-family: "Segoe UI WestEuropean", "Segoe UI", -apple-system,
+      BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif;
     -webkit-font-smoothing: antialiased;
     font-size: $ms-font-size-m;
     font-weight: $ms-font-weight-regular;
@@ -75,7 +76,19 @@
 
 .margintop {
   margin-top: 20px;
+  button {
+    &:first-of-type {
+      margin-right: 10px;
+    }
+  }
 }
 .text-margin-top {
   margin-top: 15px;
+}
+//override css
+.margin_bottom {
+  margin-bottom: 10px;
+}
+.margin_bottom_5 {
+  margin-bottom: 5px;
 }
