@@ -1,5 +1,9 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500&display=swap");
 @import "~office-ui-fabric-react/dist/sass/References.scss";
-
+body {
+  font-family: "Poppins", sans-serif;
+  font-weight: 400;
+}
 .providers {
   .container {
     max-width: 700px;
@@ -91,4 +95,79 @@
 }
 .margin_bottom_5 {
   margin-bottom: 5px;
+}
+%circle-button {
+  -webkit-border-radius: 50%;
+  -moz-border-radius: 50%;
+  border-radius: 50%;
+}
+.input_field {
+  margin-bottom: 10px;
+  label {
+    font-family: Poppins, sans-serif;
+    font-weight: 400;
+    font-size: 13px;
+    padding-bottom: 0;
+  }
+}
+.button_primary {
+  background-color: #3f51b5;
+  color: #fff;
+
+  &:hover {
+    background-color: #485bc4;
+    color: #fff;
+    box-shadow: 0 3px 5px -1px rgba(0, 0, 0, 0.2),
+      0 6px 10px 0 rgba(0, 0, 0, 0.14), 0 1px 18px 0 rgba(0, 0, 0, 0.12);
+  }
+}
+.primary_button {
+  background-color: #3f51b5;
+  color: #fff;
+  @extend %circle-button;
+  &:hover {
+    background-color: #485bc4;
+    color: #fff;
+    box-shadow: 0 3px 5px -1px rgba(0, 0, 0, 0.2),
+      0 6px 10px 0 rgba(0, 0, 0, 0.14), 0 1px 18px 0 rgba(0, 0, 0, 0.12);
+  }
+}
+.secondary_button {
+  background-color: #f44336;
+  color: #fff;
+  @extend %circle-button;
+  &:hover {
+    background-color: #fd5246;
+    color: #fff;
+    box-shadow: 0 3px 5px -1px rgba(0, 0, 0, 0.2),
+      0 6px 10px 0 rgba(0, 0, 0, 0.14), 0 1px 18px 0 rgba(0, 0, 0, 0.12);
+  }
+}
+.heading_01 {
+  font-weight: 18px;
+}
+.checkbox_label {
+  label {
+    font-family: Poppins, sans-serif;
+    font-weight: 400;
+    font-size: 13px;
+    padding-bottom: 0;
+  }
+}
+
+.searchTextbox {
+  width: 500px;
+  float: right;
+}
+
+.tableContainer {
+  float: left;
+  width: 100%;
+}
+
+.announcement {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
 }

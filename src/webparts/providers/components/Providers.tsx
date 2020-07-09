@@ -92,11 +92,11 @@ import { IProvidersProp } from "./IProvidersProps";
 
 const exampleChildClass = mergeStyles({
   display: "block",
-  marginBottom: "10px",
+  marginBottom: "0",
 });
 
 const textFieldStyles: Partial<ITextFieldStyles> = {
-  root: { maxWidth: "300px" },
+  root: { maxWidth: "100%" },
 };
 
 const currentYear = new Date().getFullYear();
@@ -145,7 +145,7 @@ export interface IDetailsListBasicExampleState {
 export default class Providers extends React.Component<
   IProvidersProp,
   IDetailsListBasicExampleState
-  > {
+> {
   private _selection: Selection;
   private _columns: IColumn[];
 
@@ -345,8 +345,8 @@ export default class Providers extends React.Component<
     this.setState({
       items: text
         ? this.state.allItems.filter(
-          (i) => i.Title.toLowerCase().indexOf(text) > -1
-        )
+            (i) => i.Title.toLowerCase().indexOf(text) > -1
+          )
         : this.state.allItems,
     });
   };
@@ -454,7 +454,11 @@ export default class Providers extends React.Component<
               newUsers[index],
               true
             );
-            that.setpermissionfornewuser("TemplateLibrary/" + that.state.formData.TemplateType, newUsers[index], true);
+            that.setpermissionfornewuser(
+              "TemplateLibrary/" + that.state.formData.TemplateType,
+              newUsers[index],
+              true
+            );
             // that.setpermissionformaintemplate("TemplateLibrary/" + this.state.formData.TemplateType, newUsers[index]);
           }
         }
@@ -500,45 +504,98 @@ export default class Providers extends React.Component<
   setpermission(index, data, user, addpermission) {
     var reacthandler = this;
     var clonedUrl = data[index].ServerRelativeUrl;
-    var url = clonedUrl.replace(this.props.currentContext.pageContext.web.serverRelativeUrl + '/', '');
+    var url = clonedUrl.replace(
+      this.props.currentContext.pageContext.web.serverRelativeUrl + "/",
+      ""
+    );
     const spHttpClient: SPHttpClient = this.props.currentContext.spHttpClient;
 
-    var contract = this.state.formData.ContractId.substr(this.state.formData.ContractId.length - 2, 2);
+    var contract = this.state.formData.ContractId.substr(
+      this.state.formData.ContractId.length - 2,
+      2
+    );
     var nextyear = parseInt(contract) + 1;
     var currentyearprefix = currentYear.toString().substr(0, 2);
-    var yearfolder = "FY " + (currentyearprefix + contract) + "-" + (currentyearprefix + nextyear) + '/' + this.state.formData.Title;
+    var yearfolder =
+      "FY " +
+      (currentyearprefix + contract) +
+      "-" +
+      (currentyearprefix + nextyear) +
+      "/" +
+      this.state.formData.Title;
 
     var providerFolder = reacthandler.rootFolder + "/" + yearfolder;
-    var mainTemplateFolder = "TemplateLibrary/" + reacthandler.state.formData.TemplateType
+    var mainTemplateFolder =
+      "TemplateLibrary/" + reacthandler.state.formData.TemplateType;
     url = url.replace(mainTemplateFolder, providerFolder);
 
-    url = url.replace(' - Upload', '');
+    url = url.replace(" - Upload", "");
 
-    var queryUrl = this.props.currentContext.pageContext.web.absoluteUrl + "/_api/web/GetFolderByServerRelativeUrl(" + "'" + url + "'" + ")/ListItemAllFields/breakroleinheritance(false)";
+    var queryUrl =
+      this.props.currentContext.pageContext.web.absoluteUrl +
+      "/_api/web/GetFolderByServerRelativeUrl(" +
+      "'" +
+      url +
+      "'" +
+      ")/ListItemAllFields/breakroleinheritance(false)";
     const spOpts: ISPHttpClientOptions = {};
 
-    sp.web.siteUsers.getByEmail(user).get().then(function (userdata) {
-      spHttpClient.post(queryUrl, SPHttpClient.configurations.v1, spOpts).then((response: SPHttpClientResponse) => {
-        if (response.ok) {
-          var permission = reacthandler.readPermission;
-          var sdata = clonedUrl.split('/');
-          if (sdata[sdata.length - 1].toLocaleLowerCase().indexOf('upload') > 0) {
-            permission = reacthandler.contributePermission;
-          }
-
-          var postUrl = reacthandler.props.currentContext.pageContext.web.absoluteUrl + '/_api/web/GetFolderByServerRelativeUrl(' + "'" + url + "'" + ')/ListItemAllFields/roleassignments/removeroleassignment(principalid=' + userdata.Id + ',roledefid=' + permission + ')';
-          if (addpermission) {
-            postUrl = reacthandler.props.currentContext.pageContext.web.absoluteUrl + '/_api/web/GetFolderByServerRelativeUrl(' + "'" + url + "'" + ')/ListItemAllFields/roleassignments/addroleassignment(principalid=' + userdata.Id + ',roledefid=' + permission + ')';
-          }
-          spHttpClient.post(postUrl, SPHttpClient.configurations.v1, spOpts).then((response: SPHttpClientResponse) => {
+    sp.web.siteUsers
+      .getByEmail(user)
+      .get()
+      .then(function (userdata) {
+        spHttpClient
+          .post(queryUrl, SPHttpClient.configurations.v1, spOpts)
+          .then((response: SPHttpClientResponse) => {
             if (response.ok) {
+              var permission = reacthandler.readPermission;
+              var sdata = clonedUrl.split("/");
+              if (
+                sdata[sdata.length - 1].toLocaleLowerCase().indexOf("upload") >
+                0
+              ) {
+                permission = reacthandler.contributePermission;
+              }
+
+              var postUrl =
+                reacthandler.props.currentContext.pageContext.web.absoluteUrl +
+                "/_api/web/GetFolderByServerRelativeUrl(" +
+                "'" +
+                url +
+                "'" +
+                ")/ListItemAllFields/roleassignments/removeroleassignment(principalid=" +
+                userdata.Id +
+                ",roledefid=" +
+                permission +
+                ")";
+              if (addpermission) {
+                postUrl =
+                  reacthandler.props.currentContext.pageContext.web
+                    .absoluteUrl +
+                  "/_api/web/GetFolderByServerRelativeUrl(" +
+                  "'" +
+                  url +
+                  "'" +
+                  ")/ListItemAllFields/roleassignments/addroleassignment(principalid=" +
+                  userdata.Id +
+                  ",roledefid=" +
+                  permission +
+                  ")";
+              }
+              spHttpClient
+                .post(postUrl, SPHttpClient.configurations.v1, spOpts)
+                .then((response: SPHttpClientResponse) => {
+                  if (response.ok) {
+                  }
+                });
             }
           });
-
-        }
       });
-    });
-    reacthandler.setpermissionfornewuser(data[index].ServerRelativeUrl, user, addpermission);
+    reacthandler.setpermissionfornewuser(
+      data[index].ServerRelativeUrl,
+      user,
+      addpermission
+    );
     index = index + 1;
     if (index < data.length) {
       reacthandler.setpermission(index, data, user, addpermission);
@@ -627,9 +684,19 @@ export default class Providers extends React.Component<
     }
     var folderName = reacthandler.rootFolder + "/" + "FY " + stryear;
     sp.web.folders.add(folderName + "/" + providerName).then(function (data) {
-      reacthandler.getFolder("TemplateLibrary/" + formData.TemplateType, providerName, year, formData);
+      reacthandler.getFolder(
+        "TemplateLibrary/" + formData.TemplateType,
+        providerName,
+        year,
+        formData
+      );
       setTimeout(() => {
-        reacthandler.setpermissionsforfolders("TemplateLibrary/" + formData.TemplateType, providerName, year, formData);
+        reacthandler.setpermissionsforfolders(
+          "TemplateLibrary/" + formData.TemplateType,
+          providerName,
+          year,
+          formData
+        );
       }, 4000);
     });
     alertify.success("Provider is created");
@@ -653,7 +720,7 @@ export default class Providers extends React.Component<
     var currentMonth = new Date().getMonth() + 1;
     var stryear = year + "-" + (year + 1);
     if (currentMonth < 7) {
-      stryear = (year - 1) + "-" + year;
+      stryear = year - 1 + "-" + year;
     }
     var folderName = reacthandler.rootFolder + "/" + "FY " + stryear;
     var clonedUrl = data[index].ServerRelativeUrl.replace(
@@ -661,9 +728,14 @@ export default class Providers extends React.Component<
       folderName + "/" + providerName
     );
     var fullurl = clonedUrl;
-    clonedUrl = clonedUrl.replace(' - Upload', '');
+    clonedUrl = clonedUrl.replace(" - Upload", "");
     sp.web.folders.add(clonedUrl).then((res) => {
-      reacthandler.getFolder(data[index].ServerRelativeUrl, providerName, year, formData);
+      reacthandler.getFolder(
+        data[index].ServerRelativeUrl,
+        providerName,
+        year,
+        formData
+      );
       index = index + 1;
       if (index < data.length) {
         reacthandler.processFolder(index, data, providerName, year, formData);
@@ -678,7 +750,13 @@ export default class Providers extends React.Component<
       .folders.get()
       .then(function (data) {
         if (data.length > 0) {
-          reacthandler.addfolderpermission(0, data, providerName, year, formData);
+          reacthandler.addfolderpermission(
+            0,
+            data,
+            providerName,
+            year,
+            formData
+          );
         }
       });
   };
@@ -688,7 +766,7 @@ export default class Providers extends React.Component<
     var currentMonth = new Date().getMonth() + 1;
     var stryear = year + "-" + (year + 1);
     if (currentMonth < 7) {
-      stryear = (year - 1) + "-" + year;
+      stryear = year - 1 + "-" + year;
     }
     var serverRelativeUrl = data[index].ServerRelativeUrl;
     var folderName = reacthandler.rootFolder + "/" + "FY " + stryear;
@@ -697,51 +775,102 @@ export default class Providers extends React.Component<
       folderName + "/" + providerName
     );
 
-    clonedUrl = clonedUrl.replace(' - Upload', '');
+    clonedUrl = clonedUrl.replace(" - Upload", "");
 
-    var url = clonedUrl.replace(this.props.currentContext.pageContext.web.serverRelativeUrl + '/', '');
+    var url = clonedUrl.replace(
+      this.props.currentContext.pageContext.web.serverRelativeUrl + "/",
+      ""
+    );
     const spHttpClient: SPHttpClient = this.props.currentContext.spHttpClient;
-    var queryUrl = this.props.currentContext.pageContext.web.absoluteUrl + "/_api/web/GetFolderByServerRelativeUrl(" + "'" + url + "'" + ")/ListItemAllFields/breakroleinheritance(false)";
+    var queryUrl =
+      this.props.currentContext.pageContext.web.absoluteUrl +
+      "/_api/web/GetFolderByServerRelativeUrl(" +
+      "'" +
+      url +
+      "'" +
+      ")/ListItemAllFields/breakroleinheritance(false)";
     const spOpts: ISPHttpClientOptions = {};
-    spHttpClient.post(queryUrl, SPHttpClient.configurations.v1, spOpts).then((response: SPHttpClientResponse) => {
-      if (response.ok) {
-        var permission = reacthandler.readPermission;
-        var sdata = serverRelativeUrl.split('/');
-        if (sdata[sdata.length - 1].toLocaleLowerCase().indexOf('upload') > 0) {
-          permission = reacthandler.contributePermission;
-        }
-
-        sp.web.getFolderByServerRelativeUrl(serverRelativeUrl).expand("ListItemAllFields/RoleAssignments/Member", "ListItemAllFields/RoleAssignments/RoleDefinitionBindings", "ListItemAllFields/RoleAssignments/Member/Users").get().then((resdata) => {
-          var roleAssignments = resdata["ListItemAllFields"].RoleAssignments;
-          for (let i = 0; i < roleAssignments.length; i++) {
-            const role = roleAssignments[i];
-            for (let j = 0; j < role.RoleDefinitionBindings.length; j++) {
-              const definition = role.RoleDefinitionBindings[j];
-              var bbhcpostUrl = this.props.currentContext.pageContext.web.absoluteUrl + '/_api/web/GetFolderByServerRelativeUrl(' + "'" + url + "'" + ')/ListItemAllFields/roleassignments/addroleassignment(principalid=' + role.Member.Id + ',roledefid=' + definition.Id + ')';
-              spHttpClient.post(bbhcpostUrl, SPHttpClient.configurations.v1, spOpts).then((response: SPHttpClientResponse) => {
-
-              });
-            }
+    spHttpClient
+      .post(queryUrl, SPHttpClient.configurations.v1, spOpts)
+      .then((response: SPHttpClientResponse) => {
+        if (response.ok) {
+          var permission = reacthandler.readPermission;
+          var sdata = serverRelativeUrl.split("/");
+          if (
+            sdata[sdata.length - 1].toLocaleLowerCase().indexOf("upload") > 0
+          ) {
+            permission = reacthandler.contributePermission;
           }
-        });
-        for (let s = 0; s < reacthandler.userDetails.length; s++) {
-          const userData = reacthandler.userDetails[s];
-          var postUrl = this.props.currentContext.pageContext.web.absoluteUrl + '/_api/web/GetFolderByServerRelativeUrl(' + "'" + url + "'" + ')/ListItemAllFields/roleassignments/addroleassignment(principalid=' + userData.Id + ',roledefid=' + permission + ')';
-          spHttpClient.post(postUrl, SPHttpClient.configurations.v1, spOpts).then((response: SPHttpClientResponse) => {
 
-          });
+          sp.web
+            .getFolderByServerRelativeUrl(serverRelativeUrl)
+            .expand(
+              "ListItemAllFields/RoleAssignments/Member",
+              "ListItemAllFields/RoleAssignments/RoleDefinitionBindings",
+              "ListItemAllFields/RoleAssignments/Member/Users"
+            )
+            .get()
+            .then((resdata) => {
+              var roleAssignments =
+                resdata["ListItemAllFields"].RoleAssignments;
+              for (let i = 0; i < roleAssignments.length; i++) {
+                const role = roleAssignments[i];
+                for (let j = 0; j < role.RoleDefinitionBindings.length; j++) {
+                  const definition = role.RoleDefinitionBindings[j];
+                  var bbhcpostUrl =
+                    this.props.currentContext.pageContext.web.absoluteUrl +
+                    "/_api/web/GetFolderByServerRelativeUrl(" +
+                    "'" +
+                    url +
+                    "'" +
+                    ")/ListItemAllFields/roleassignments/addroleassignment(principalid=" +
+                    role.Member.Id +
+                    ",roledefid=" +
+                    definition.Id +
+                    ")";
+                  spHttpClient
+                    .post(bbhcpostUrl, SPHttpClient.configurations.v1, spOpts)
+                    .then((response: SPHttpClientResponse) => {});
+                }
+              }
+            });
+          for (let s = 0; s < reacthandler.userDetails.length; s++) {
+            const userData = reacthandler.userDetails[s];
+            var postUrl =
+              this.props.currentContext.pageContext.web.absoluteUrl +
+              "/_api/web/GetFolderByServerRelativeUrl(" +
+              "'" +
+              url +
+              "'" +
+              ")/ListItemAllFields/roleassignments/addroleassignment(principalid=" +
+              userData.Id +
+              ",roledefid=" +
+              permission +
+              ")";
+            spHttpClient
+              .post(postUrl, SPHttpClient.configurations.v1, spOpts)
+              .then((response: SPHttpClientResponse) => {});
+          }
+
+          reacthandler.setpermissionsforfolders(
+            data[index].ServerRelativeUrl,
+            providerName,
+            year,
+            formData
+          );
+          index = index + 1;
+          if (index < data.length) {
+            reacthandler.addfolderpermission(
+              index,
+              data,
+              providerName,
+              year,
+              formData
+            );
+          }
         }
-
-        reacthandler.setpermissionsforfolders(data[index].ServerRelativeUrl, providerName, year, formData);
-        index = index + 1;
-        if (index < data.length) {
-          reacthandler.addfolderpermission(index, data, providerName, year, formData);
-        }
-
-      }
-    });
-
-  }
+      });
+  };
 
   createFolder = async (folderPath) => {
     await sp.web.folders.add(folderPath);
@@ -937,7 +1066,7 @@ export default class Providers extends React.Component<
       },
       styles: {
         root: {
-          width: 300,
+          width: "100%",
           // paddingTop: 10,
         },
       },
@@ -985,6 +1114,7 @@ export default class Providers extends React.Component<
         float: "left",
         height: "50px",
         width: "50px",
+        fontSize: "200px",
       },
       icon: {
         fontSize: "50px",
@@ -1080,32 +1210,39 @@ export default class Providers extends React.Component<
         />
 
         <Fabric>
-          <div className={exampleChildClass}>{this.state.selectionDetails}</div>
-          <Announced message={this.state.selectionDetails} />
-          <TextField
-            className={exampleChildClass}
-            label="Filter by provider name:"
-            onChange={this._onFilter.bind(this)}
-            styles={textFieldStyles}
-          />
-          <Announced
-            message={`Number of items after filter applied: ${this.state.items.length}.`}
-          />
-          <MarqueeSelection selection={this._selection}>
-            <DetailsList
-              items={this.state.items}
-              columns={this._columns}
-              setKey="set"
-              layoutMode={DetailsListLayoutMode.justified}
-              selection={this._selection}
-              selectionPreservedOnEmptyClick={true}
-              ariaLabelForSelectionColumn="Toggle selection"
-              ariaLabelForSelectAllCheckbox="Toggle selection for all items"
-              checkButtonAriaLabel="Row checkbox"
-              onItemInvoked={this._onItemInvoked}
-              onRenderItemColumn={_renderItemColumn}
+          <div className={styles.announcement}>
+            <div className={exampleChildClass}>
+              {this.state.selectionDetails}
+            </div>
+            <Announced message={this.state.selectionDetails} />
+
+            <TextField
+              prefix="Filter by provider name:"
+              onChange={this._onFilter.bind(this)}
+              styles={textFieldStyles}
+              className={styles.searchTextbox}
             />
-          </MarqueeSelection>
+            <Announced
+              message={`Number of items after filter applied: ${this.state.items.length}.`}
+            />
+          </div>
+          <div className={styles.tableContainer}>
+            <MarqueeSelection selection={this._selection}>
+              <DetailsList
+                items={this.state.items}
+                columns={this._columns}
+                setKey="set"
+                layoutMode={DetailsListLayoutMode.justified}
+                selection={this._selection}
+                selectionPreservedOnEmptyClick={true}
+                ariaLabelForSelectionColumn="Toggle selection"
+                ariaLabelForSelectAllCheckbox="Toggle selection for all items"
+                checkButtonAriaLabel="Row checkbox"
+                onItemInvoked={this._onItemInvoked}
+                onRenderItemColumn={_renderItemColumn}
+              />
+            </MarqueeSelection>
+          </div>
         </Fabric>
 
         <Dialog
@@ -1123,51 +1260,48 @@ export default class Providers extends React.Component<
                   onChange={this.templateChange.bind(this)}
                   label="Provider Type"
                   styles={choisestyle}
+                  className={styles.heading_01}
                 />
 
                 <TextField
                   label="Provider ID"
                   onChange={(e) => this.inputChangeHandler.call(this, e)}
-                  width="100px"
                   name="ProviderID"
                   value={this.state.formData.ProviderID}
                   required
-                  className={styles.margin_bottom}
+                  className={styles.input_field}
                 ></TextField>
 
                 <TextField
                   label="Provider Name"
                   onChange={this.providerNameChange}
-                  width="100px"
                   name="Title"
                   value={this.state.formData.Title}
                   required
-                  className={styles.margin_bottom}
+                  className={styles.input_field}
                 ></TextField>
 
                 <TextField
                   label="Contract ID"
-                  width="200px"
                   onChange={(e) => this.inputChangeHandler.call(this, e)}
                   value={this.state.formData.ContractId}
                   name="ContractId"
                   required
-                  className={styles.margin_bottom}
+                  className={styles.input_field}
                 ></TextField>
 
                 <TextField
                   label="Legal Name"
-                  width="200px"
                   onChange={(e) => this.inputChangeHandler.call(this, e)}
                   value={this.state.formData.LegalName}
                   name="LegalName"
                   required
-                  className={styles.margin_bottom_5}
+                  className={styles.input_field}
                 ></TextField>
               </div>
             ) : (
-                ""
-              )}
+              ""
+            )}
 
             {this.state.AllUsers.map((user, index) => {
               if (this.state.AllUsers.length == 1) {
@@ -1177,12 +1311,12 @@ export default class Providers extends React.Component<
                       <Stack {...columnstyle}>
                         <TextField
                           label="User"
-                          width="200px"
                           id={index + ""}
                           onChange={(e) => this.userchange.call(this, e)}
                           value={user}
                           name="userName"
                           required
+                          className={styles.input_field}
                         ></TextField>
                       </Stack>
 
@@ -1192,6 +1326,7 @@ export default class Providers extends React.Component<
                           title="Add User"
                           ariaLabel="Add"
                           onClick={this.newuser.bind(this)}
+                          className={styles.primary_button}
                         />
                       </Stack>
                     </Stack>
@@ -1204,12 +1339,12 @@ export default class Providers extends React.Component<
                       <Stack {...columnstyle}>
                         <TextField
                           label="User"
-                          width="200px"
                           id={index + ""}
                           onChange={(e) => this.userchange.call(this, e)}
                           value={user}
                           name="userName"
                           required
+                          className={styles.input_field}
                         ></TextField>
                       </Stack>
 
@@ -1219,6 +1354,7 @@ export default class Providers extends React.Component<
                           title="Add User"
                           ariaLabel="Add"
                           onClick={this.newuser.bind(this)}
+                          className={styles.primary_button}
                         />
                       </Stack>
 
@@ -1228,6 +1364,7 @@ export default class Providers extends React.Component<
                           title="Remove User"
                           ariaLabel="Cancel"
                           onClick={this.removeuser.bind(this, index)}
+                          className={styles.secondary_button}
                         />
                       </Stack>
                     </Stack>
@@ -1237,12 +1374,15 @@ export default class Providers extends React.Component<
             })}
           </Stack>
 
-          <div className={styles.margintop}>
-            <PrimaryButton onClick={this.processInputProvider}>
+          <DialogFooter>
+            <PrimaryButton
+              onClick={this.processInputProvider}
+              className={styles.button_primary}
+            >
               {this.state.formData.Id == 0 ? "Add New Provider" : "Submit"}
             </PrimaryButton>
             <DefaultButton onClick={this.hideDialog.bind(this)} text="Close" />
-          </div>
+          </DialogFooter>
         </Dialog>
 
         <Dialog
