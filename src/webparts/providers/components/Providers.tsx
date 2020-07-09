@@ -449,11 +449,16 @@ export default class Providers extends React.Component<
         if (newUsers[index]) {
           var exist = existingUsers.filter((c) => c == newUsers[index]);
           if (exist.length == 0) {
+<<<<<<< HEAD
             that.setpermissionfornewuser(
               "TemplateLibrary/" + that.state.formData.TemplateType,
               newUsers[index],
               true
             );
+=======
+            that.setpermissionfornewuser("TemplateLibrary/" + that.state.formData.TemplateType, newUsers[index], true);
+            // that.setpermissionformaintemplate("TemplateLibrary/" + this.state.formData.TemplateType, newUsers[index]);
+>>>>>>> 16068cffe39ffbf1b824eae314ece3270a8f82ea
           }
         }
       }
@@ -468,6 +473,13 @@ export default class Providers extends React.Component<
               false
             );
           }
+        }
+      }
+    } else {
+      for (let index = 0; index < this.state.AllUsers.length; index++) {
+        const user = this.state.AllUsers[index];
+        if (user) {
+          // that.setpermissionformaintemplate("TemplateLibrary/" + this.state.formData.TemplateType, user);
         }
       }
     }
@@ -577,6 +589,11 @@ export default class Providers extends React.Component<
                 });
             }
           });
+<<<<<<< HEAD
+=======
+
+        }
+>>>>>>> 16068cffe39ffbf1b824eae314ece3270a8f82ea
       });
     reacthandler.setpermissionfornewuser(
       data[index].ServerRelativeUrl,
@@ -589,6 +606,42 @@ export default class Providers extends React.Component<
     }
   }
 
+<<<<<<< HEAD
+=======
+  // setpermissionformaintemplate(url, useremail) {
+  //   var that = this;
+  //   sp.web
+  //     .getFolderByServerRelativePath(url)
+  //     .folders.get()
+  //     .then(function (data) {
+  //       for (let index = 0; index < data.length; index++) {
+  //         that.setmaintemplatepermission(data[index].ServerRelativeUrl, useremail);
+  //         that.setpermissionformaintemplate(data[index].ServerRelativeUrl, useremail);
+  //       }
+  //     });
+  // }
+
+  // setmaintemplatepermission(mainurl, usermail) {
+  //   var reacthandler = this;
+  //   var url = mainurl.replace(this.props.currentContext.pageContext.web.serverRelativeUrl + '/', '');
+  //   const spHttpClient: SPHttpClient = this.props.currentContext.spHttpClient;
+  //   var queryUrl = this.props.currentContext.pageContext.web.absoluteUrl + "/_api/web/GetFolderByServerRelativeUrl(" + "'" + url + "'" + ")/ListItemAllFields/breakroleinheritance(false)";
+  //   const spOpts: ISPHttpClientOptions = {};
+  //   spHttpClient.post(queryUrl, SPHttpClient.configurations.v1, spOpts).then((response: SPHttpClientResponse) => {
+  //     if (response.ok) {
+  //       var permission = reacthandler.readPermission;
+  //       sp.web.siteUsers.getByEmail(usermail).get().then(function (userdata) {
+  //         var postUrl = reacthandler.props.currentContext.pageContext.web.absoluteUrl + '/_api/web/GetFolderByServerRelativeUrl(' + "'" + url + "'" + ')/ListItemAllFields/roleassignments/addroleassignment(principalid=' + userdata.Id + ',roledefid=' + permission + ')';
+  //         spHttpClient.post(postUrl, SPHttpClient.configurations.v1, spOpts).then((response: SPHttpClientResponse) => {
+  //           if (response.ok) {
+  //           }
+  //         });
+  //       });
+  //     }
+  //   })
+  // }
+
+>>>>>>> 16068cffe39ffbf1b824eae314ece3270a8f82ea
   addToList(year, formData) {
     var that = this;
     if (formData.Id > 0) {
@@ -658,12 +711,15 @@ export default class Providers extends React.Component<
       .folders.get()
       .then(function (data) {
         if (data.length > 0) {
-          reacthandler.processFolder(0, data, providerName, year, formData);
+          for (let index = 0; index < data.length; index++) {
+            reacthandler.getFolder(data[index].ServerRelativeUrl, providerName, year, formData);
+            reacthandler.processFolder(data[index].ServerRelativeUrl, providerName, year, formData);
+          }
         }
       });
   };
 
-  async processFolder(index, data, providerName, year, formData) {
+  async processFolder(serverRelativeUrl, providerName, year, formData) {
     var reacthandler = this;
     var currentMonth = new Date().getMonth() + 1;
     var stryear = year + "-" + (year + 1);
@@ -671,14 +727,19 @@ export default class Providers extends React.Component<
       stryear = year - 1 + "-" + year;
     }
     var folderName = reacthandler.rootFolder + "/" + "FY " + stryear;
-    var clonedUrl = data[index].ServerRelativeUrl.replace(
+    var clonedUrl = serverRelativeUrl.replace(
       "TemplateLibrary/" + formData.TemplateType,
       folderName + "/" + providerName
     );
+<<<<<<< HEAD
 
     clonedUrl = clonedUrl.replace(" - Upload", "");
 
     // reacthandler.createFolder(clonedUrl);
+=======
+    var fullurl = clonedUrl;
+    clonedUrl = clonedUrl.replace(' - Upload', '');
+>>>>>>> 16068cffe39ffbf1b824eae314ece3270a8f82ea
     sp.web.folders.add(clonedUrl).then((res) => {
       var url = clonedUrl.replace(
         this.props.currentContext.pageContext.web.serverRelativeUrl + "/",
@@ -693,6 +754,7 @@ export default class Providers extends React.Component<
         "'" +
         ")/ListItemAllFields/breakroleinheritance(false)";
       const spOpts: ISPHttpClientOptions = {};
+<<<<<<< HEAD
       spHttpClient
         .post(queryUrl, SPHttpClient.configurations.v1, spOpts)
         .then((response: SPHttpClientResponse) => {
@@ -799,6 +861,36 @@ export default class Providers extends React.Component<
       if (index < data.length) {
         reacthandler.processFolder(index, data, providerName, year, formData);
       }
+=======
+      spHttpClient.post(queryUrl, SPHttpClient.configurations.v1, spOpts).then((response: SPHttpClientResponse) => {
+        if (response.ok) {
+          var permission = reacthandler.readPermission;
+          var sdata = serverRelativeUrl.split('/');
+          if (sdata[sdata.length - 1].toLocaleLowerCase().indexOf('upload') > 0) {
+            permission = reacthandler.contributePermission;
+          }
+          for (let s = 0; s < reacthandler.userDetails.length; s++) {
+            const userData = reacthandler.userDetails[s];
+            var postUrl = this.props.currentContext.pageContext.web.absoluteUrl + '/_api/web/GetFolderByServerRelativeUrl(' + "'" + url + "'" + ')/ListItemAllFields/roleassignments/addroleassignment(principalid=' + userData.Id + ',roledefid=' + permission + ')';
+            spHttpClient.post(postUrl, SPHttpClient.configurations.v1, spOpts).then((response: SPHttpClientResponse) => {
+              sp.web.getFolderByServerRelativeUrl(serverRelativeUrl).expand("ListItemAllFields/RoleAssignments/Member", "ListItemAllFields/RoleAssignments/RoleDefinitionBindings", "ListItemAllFields/RoleAssignments/Member/Users").get().then((resdata) => {
+                var roleAssignments = resdata["ListItemAllFields"].RoleAssignments;
+                for (let i = 0; i < roleAssignments.length; i++) {
+                  const role = roleAssignments[i];
+                  for (let j = 0; j < role.RoleDefinitionBindings.length; j++) {
+                    const definition = role.RoleDefinitionBindings[j];
+                    var bbhcpostUrl = this.props.currentContext.pageContext.web.absoluteUrl + '/_api/web/GetFolderByServerRelativeUrl(' + "'" + url + "'" + ')/ListItemAllFields/roleassignments/addroleassignment(principalid=' + role.Member.Id + ',roledefid=' + definition.Id + ')';
+                    spHttpClient.post(bbhcpostUrl, SPHttpClient.configurations.v1, spOpts).then((response: SPHttpClientResponse) => {
+
+                    });
+                  }
+                }
+              });
+            });
+          }
+        }
+      });
+>>>>>>> 16068cffe39ffbf1b824eae314ece3270a8f82ea
     });
   }
 

@@ -129,7 +129,7 @@ export default class ProviderDocuments extends React.Component<
             } else {
               if (!dataLoaded) {
                 dataLoaded = true;
-                that.getFolders('', providerData.TemplateType, '');
+                that.loadUploadFolders(providerData.TemplateType);
               }
               allProviders.push({
                 key: providerData.Title,
@@ -144,37 +144,60 @@ export default class ProviderDocuments extends React.Component<
       });
   }
 
-  getFolders(folderName, templateType, displayName) {
-    var url = this.templateLibrary + "/" + templateType;
-    if (folderName) {
-      url = url + "/" + folderName;
-    }
+  loadUploadFolders(templateType) {
     var that = this;
-    var allFolders = that.state.folders;
-    sp.web
-      .getFolderByServerRelativePath(url)
-      .folders.get()
-      .then(function (data) {
-        if (data.length > 0) {
-          for (let index = 0; index < data.length; index++) {
-            var text = '';
-            if (displayName) {
-              text = displayName + ' - ' + data[index].Name.replace(' - Upload', '');
-            } else {
-              text = data[index].Name.replace(' - Upload', '');
-            }
-            if (data[index].Name.toLocaleLowerCase().indexOf('upload') > 0) {
-              allFolders.push({
-                key: folderName + '/' + text,
-                text: text,
-              });
-            }
-            that.setState({ folders: allFolders });
-            that.getFolders(folderName + '/' + data[index].Name, templateType, text);
-          }
+    sp.web.lists
+      .getByTitle("UploadFolders")
+      .items.select("Title", "TemplateType")
+      .filter("TemplateType eq '" + templateType + "'")
+      .get()
+      .then((res) => {
+        var allFolders = that.state.folders;
+        allFolders = [];
+        for (let index = 0; index < res.length; index++) {
+          var cleartext = res[index].Title.replace(' - Upload', '');
+          var url = cleartext.replace(' - ', '/');
+          allFolders.push({
+            key: url,
+            text: cleartext,
+          });
         }
+        that.setState({ folders: allFolders });
       });
   }
+
+  // getFolders(folderName, templateType, displayName) {
+  //   var url = this.templateLibrary + "/" + templateType;
+  //   if (folderName) {
+  //     url = url + "/" + folderName;
+  //   }
+  //   var that = this;
+  //   var allFolders = that.state.folders;
+  //   sp.web
+  //     .getFolderByServerRelativePath(url)
+  //     .folders.get()
+  //     .then(function (data) {
+  //       if (data.length > 0) {
+  //         for (let index = 0; index < data.length; index++) {
+  //           var text = '';
+  //           var cleartext = data[index].Name.replace(' - Upload', '')
+  //           if (displayName) {
+  //             text = displayName + ' - ' + cleartext;
+  //           } else {
+  //             text = cleartext;
+  //           }
+  //           if (data[index].Name.toLocaleLowerCase().indexOf('upload') > 0) {
+  //             allFolders.push({
+  //               key: folderName + '/' + cleartext,
+  //               text: text,
+  //             });
+  //           }
+  //           that.setState({ folders: allFolders });
+  //           that.getFolders(folderName + '/' + data[index].Name, templateType, text);
+  //         }
+  //       }
+  //     });
+  // }
 
   fileUpload(e) {
     var files = e.target.files;
