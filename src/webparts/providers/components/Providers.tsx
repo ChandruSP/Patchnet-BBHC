@@ -145,7 +145,7 @@ export interface IDetailsListBasicExampleState {
 export default class Providers extends React.Component<
   IProvidersProp,
   IDetailsListBasicExampleState
-> {
+  > {
   private _selection: Selection;
   private _columns: IColumn[];
 
@@ -345,8 +345,8 @@ export default class Providers extends React.Component<
     this.setState({
       items: text
         ? this.state.allItems.filter(
-            (i) => i.Title.toLowerCase().indexOf(text) > -1
-          )
+          (i) => i.Title.toLowerCase().indexOf(text) > -1
+        )
         : this.state.allItems,
     });
   };
@@ -449,16 +449,13 @@ export default class Providers extends React.Component<
         if (newUsers[index]) {
           var exist = existingUsers.filter((c) => c == newUsers[index]);
           if (exist.length == 0) {
-<<<<<<< HEAD
             that.setpermissionfornewuser(
               "TemplateLibrary/" + that.state.formData.TemplateType,
               newUsers[index],
               true
             );
-=======
             that.setpermissionfornewuser("TemplateLibrary/" + that.state.formData.TemplateType, newUsers[index], true);
             // that.setpermissionformaintemplate("TemplateLibrary/" + this.state.formData.TemplateType, newUsers[index]);
->>>>>>> 16068cffe39ffbf1b824eae314ece3270a8f82ea
           }
         }
       }
@@ -503,111 +500,51 @@ export default class Providers extends React.Component<
   setpermission(index, data, user, addpermission) {
     var reacthandler = this;
     var clonedUrl = data[index].ServerRelativeUrl;
-    var url = clonedUrl.replace(
-      this.props.currentContext.pageContext.web.serverRelativeUrl + "/",
-      ""
-    );
+    var url = clonedUrl.replace(this.props.currentContext.pageContext.web.serverRelativeUrl + '/', '');
     const spHttpClient: SPHttpClient = this.props.currentContext.spHttpClient;
 
-    var contract = this.state.formData.ContractId.substr(
-      this.state.formData.ContractId.length - 2,
-      2
-    );
+    var contract = this.state.formData.ContractId.substr(this.state.formData.ContractId.length - 2, 2);
     var nextyear = parseInt(contract) + 1;
     var currentyearprefix = currentYear.toString().substr(0, 2);
-    var yearfolder =
-      "FY " +
-      (currentyearprefix + contract) +
-      "-" +
-      (currentyearprefix + nextyear) +
-      "/" +
-      this.state.formData.Title;
+    var yearfolder = "FY " + (currentyearprefix + contract) + "-" + (currentyearprefix + nextyear) + '/' + this.state.formData.Title;
 
     var providerFolder = reacthandler.rootFolder + "/" + yearfolder;
-    var mainTemplateFolder =
-      "TemplateLibrary/" + reacthandler.state.formData.TemplateType;
+    var mainTemplateFolder = "TemplateLibrary/" + reacthandler.state.formData.TemplateType
     url = url.replace(mainTemplateFolder, providerFolder);
 
-    url = url.replace(" - Upload", "");
+    url = url.replace(' - Upload', '');
 
-    var queryUrl =
-      this.props.currentContext.pageContext.web.absoluteUrl +
-      "/_api/web/GetFolderByServerRelativeUrl(" +
-      "'" +
-      url +
-      "'" +
-      ")/ListItemAllFields/breakroleinheritance(false)";
+    var queryUrl = this.props.currentContext.pageContext.web.absoluteUrl + "/_api/web/GetFolderByServerRelativeUrl(" + "'" + url + "'" + ")/ListItemAllFields/breakroleinheritance(false)";
     const spOpts: ISPHttpClientOptions = {};
 
-    sp.web.siteUsers
-      .getByEmail(user)
-      .get()
-      .then(function (userdata) {
-        spHttpClient
-          .post(queryUrl, SPHttpClient.configurations.v1, spOpts)
-          .then((response: SPHttpClientResponse) => {
-            if (response.ok) {
-              var permission = reacthandler.readPermission;
-              var sdata = clonedUrl.split("/");
-              if (
-                sdata[sdata.length - 1].toLocaleLowerCase().indexOf("upload") >
-                0
-              ) {
-                permission = reacthandler.contributePermission;
-              }
+    sp.web.siteUsers.getByEmail(user).get().then(function (userdata) {
+      spHttpClient.post(queryUrl, SPHttpClient.configurations.v1, spOpts).then((response: SPHttpClientResponse) => {
+        if (response.ok) {
+          var permission = reacthandler.readPermission;
+          var sdata = clonedUrl.split('/');
+          if (sdata[sdata.length - 1].toLocaleLowerCase().indexOf('upload') > 0) {
+            permission = reacthandler.contributePermission;
+          }
 
-              var postUrl =
-                reacthandler.props.currentContext.pageContext.web.absoluteUrl +
-                "/_api/web/GetFolderByServerRelativeUrl(" +
-                "'" +
-                url +
-                "'" +
-                ")/ListItemAllFields/roleassignments/removeroleassignment(principalid=" +
-                userdata.Id +
-                ",roledefid=" +
-                permission +
-                ")";
-              if (addpermission) {
-                postUrl =
-                  reacthandler.props.currentContext.pageContext.web
-                    .absoluteUrl +
-                  "/_api/web/GetFolderByServerRelativeUrl(" +
-                  "'" +
-                  url +
-                  "'" +
-                  ")/ListItemAllFields/roleassignments/addroleassignment(principalid=" +
-                  userdata.Id +
-                  ",roledefid=" +
-                  permission +
-                  ")";
-              }
-              spHttpClient
-                .post(postUrl, SPHttpClient.configurations.v1, spOpts)
-                .then((response: SPHttpClientResponse) => {
-                  if (response.ok) {
-                  }
-                });
+          var postUrl = reacthandler.props.currentContext.pageContext.web.absoluteUrl + '/_api/web/GetFolderByServerRelativeUrl(' + "'" + url + "'" + ')/ListItemAllFields/roleassignments/removeroleassignment(principalid=' + userdata.Id + ',roledefid=' + permission + ')';
+          if (addpermission) {
+            postUrl = reacthandler.props.currentContext.pageContext.web.absoluteUrl + '/_api/web/GetFolderByServerRelativeUrl(' + "'" + url + "'" + ')/ListItemAllFields/roleassignments/addroleassignment(principalid=' + userdata.Id + ',roledefid=' + permission + ')';
+          }
+          spHttpClient.post(postUrl, SPHttpClient.configurations.v1, spOpts).then((response: SPHttpClientResponse) => {
+            if (response.ok) {
             }
           });
-<<<<<<< HEAD
-=======
 
         }
->>>>>>> 16068cffe39ffbf1b824eae314ece3270a8f82ea
       });
-    reacthandler.setpermissionfornewuser(
-      data[index].ServerRelativeUrl,
-      user,
-      addpermission
-    );
+    });
+    reacthandler.setpermissionfornewuser(data[index].ServerRelativeUrl, user, addpermission);
     index = index + 1;
     if (index < data.length) {
       reacthandler.setpermission(index, data, user, addpermission);
     }
   }
 
-<<<<<<< HEAD
-=======
   // setpermissionformaintemplate(url, useremail) {
   //   var that = this;
   //   sp.web
@@ -641,7 +578,6 @@ export default class Providers extends React.Component<
   //   })
   // }
 
->>>>>>> 16068cffe39ffbf1b824eae314ece3270a8f82ea
   addToList(year, formData) {
     var that = this;
     if (formData.Id > 0) {
@@ -689,16 +625,12 @@ export default class Providers extends React.Component<
     if (currentMonth < 7) {
       stryear = year - 1 + "-" + year;
     }
-
     var folderName = reacthandler.rootFolder + "/" + "FY " + stryear;
-
     sp.web.folders.add(folderName + "/" + providerName).then(function (data) {
-      reacthandler.getFolder(
-        "TemplateLibrary/" + formData.TemplateType,
-        providerName,
-        year,
-        formData
-      );
+      reacthandler.getFolder("TemplateLibrary/" + formData.TemplateType, providerName, year, formData);
+      setTimeout(() => {
+        reacthandler.setpermissionsforfolders("TemplateLibrary/" + formData.TemplateType, providerName, year, formData);
+      }, 4000);
     });
     alertify.success("Provider is created");
     reacthandler.setState({ hideDialog: true });
@@ -711,187 +643,104 @@ export default class Providers extends React.Component<
       .folders.get()
       .then(function (data) {
         if (data.length > 0) {
-          for (let index = 0; index < data.length; index++) {
-            reacthandler.getFolder(data[index].ServerRelativeUrl, providerName, year, formData);
-            reacthandler.processFolder(data[index].ServerRelativeUrl, providerName, year, formData);
-          }
+          reacthandler.processFolder(0, data, providerName, year, formData);
         }
       });
   };
 
-  async processFolder(serverRelativeUrl, providerName, year, formData) {
+  processFolder(index, data, providerName, year, formData) {
     var reacthandler = this;
     var currentMonth = new Date().getMonth() + 1;
     var stryear = year + "-" + (year + 1);
     if (currentMonth < 7) {
-      stryear = year - 1 + "-" + year;
+      stryear = (year - 1) + "-" + year;
     }
+    var folderName = reacthandler.rootFolder + "/" + "FY " + stryear;
+    var clonedUrl = data[index].ServerRelativeUrl.replace(
+      "TemplateLibrary/" + formData.TemplateType,
+      folderName + "/" + providerName
+    );
+    var fullurl = clonedUrl;
+    clonedUrl = clonedUrl.replace(' - Upload', '');
+    sp.web.folders.add(clonedUrl).then((res) => {
+      reacthandler.getFolder(data[index].ServerRelativeUrl, providerName, year, formData);
+      index = index + 1;
+      if (index < data.length) {
+        reacthandler.processFolder(index, data, providerName, year, formData);
+      }
+    });
+  }
+
+  setpermissionsforfolders = (folderPath, providerName, year, formData) => {
+    var reacthandler = this;
+    sp.web
+      .getFolderByServerRelativePath(folderPath)
+      .folders.get()
+      .then(function (data) {
+        if (data.length > 0) {
+          reacthandler.addfolderpermission(0, data, providerName, year, formData);
+        }
+      });
+  };
+
+  addfolderpermission = (index, data, providerName, year, formData) => {
+    var reacthandler = this;
+    var currentMonth = new Date().getMonth() + 1;
+    var stryear = year + "-" + (year + 1);
+    if (currentMonth < 7) {
+      stryear = (year - 1) + "-" + year;
+    }
+    var serverRelativeUrl = data[index].ServerRelativeUrl;
     var folderName = reacthandler.rootFolder + "/" + "FY " + stryear;
     var clonedUrl = serverRelativeUrl.replace(
       "TemplateLibrary/" + formData.TemplateType,
       folderName + "/" + providerName
     );
-<<<<<<< HEAD
 
-    clonedUrl = clonedUrl.replace(" - Upload", "");
-
-    // reacthandler.createFolder(clonedUrl);
-=======
-    var fullurl = clonedUrl;
     clonedUrl = clonedUrl.replace(' - Upload', '');
->>>>>>> 16068cffe39ffbf1b824eae314ece3270a8f82ea
-    sp.web.folders.add(clonedUrl).then((res) => {
-      var url = clonedUrl.replace(
-        this.props.currentContext.pageContext.web.serverRelativeUrl + "/",
-        ""
-      );
-      const spHttpClient: SPHttpClient = this.props.currentContext.spHttpClient;
-      var queryUrl =
-        this.props.currentContext.pageContext.web.absoluteUrl +
-        "/_api/web/GetFolderByServerRelativeUrl(" +
-        "'" +
-        url +
-        "'" +
-        ")/ListItemAllFields/breakroleinheritance(false)";
-      const spOpts: ISPHttpClientOptions = {};
-<<<<<<< HEAD
-      spHttpClient
-        .post(queryUrl, SPHttpClient.configurations.v1, spOpts)
-        .then((response: SPHttpClientResponse) => {
-          if (response.ok) {
-            var permission = reacthandler.readPermission;
-            var sdata = data[index].ServerRelativeUrl.split("/");
-            if (
-              sdata[sdata.length - 1].toLocaleLowerCase().indexOf("upload") > 0
-            ) {
-              permission = reacthandler.contributePermission;
-            }
-            for (
-              let index = 0;
-              index < reacthandler.userDetails.length;
-              index++
-            ) {
-              const userData = reacthandler.userDetails[index];
 
-              // var getPermissionUrl = this.props.currentContext.pageContext.web.absoluteUrl + "/_api/web/GetFolderByServerRelativeUrl(" + "'" + data[index].ServerRelativeUrl + "'" + ")/ListItemAllFields/roleassignments?$expand=Member,RoleDefinitionBindings";
+    var url = clonedUrl.replace(this.props.currentContext.pageContext.web.serverRelativeUrl + '/', '');
+    const spHttpClient: SPHttpClient = this.props.currentContext.spHttpClient;
+    var queryUrl = this.props.currentContext.pageContext.web.absoluteUrl + "/_api/web/GetFolderByServerRelativeUrl(" + "'" + url + "'" + ")/ListItemAllFields/breakroleinheritance(false)";
+    const spOpts: ISPHttpClientOptions = {};
+    spHttpClient.post(queryUrl, SPHttpClient.configurations.v1, spOpts).then((response: SPHttpClientResponse) => {
+      if (response.ok) {
+        var permission = reacthandler.readPermission;
+        var sdata = serverRelativeUrl.split('/');
+        if (sdata[sdata.length - 1].toLocaleLowerCase().indexOf('upload') > 0) {
+          permission = reacthandler.contributePermission;
+        }
 
-              // const requestHeaders: Headers = new Headers();
-              // requestHeaders.append('Accept', 'application/json');
-              // requestHeaders.append('Content-type', 'application/json');
+        sp.web.getFolderByServerRelativeUrl(serverRelativeUrl).expand("ListItemAllFields/RoleAssignments/Member", "ListItemAllFields/RoleAssignments/RoleDefinitionBindings", "ListItemAllFields/RoleAssignments/Member/Users").get().then((resdata) => {
+          var roleAssignments = resdata["ListItemAllFields"].RoleAssignments;
+          for (let i = 0; i < roleAssignments.length; i++) {
+            const role = roleAssignments[i];
+            for (let j = 0; j < role.RoleDefinitionBindings.length; j++) {
+              const definition = role.RoleDefinitionBindings[j];
+              var bbhcpostUrl = this.props.currentContext.pageContext.web.absoluteUrl + '/_api/web/GetFolderByServerRelativeUrl(' + "'" + url + "'" + ')/ListItemAllFields/roleassignments/addroleassignment(principalid=' + role.Member.Id + ',roledefid=' + definition.Id + ')';
+              spHttpClient.post(bbhcpostUrl, SPHttpClient.configurations.v1, spOpts).then((response: SPHttpClientResponse) => {
 
-              // const opt: ISPHttpClientOptions = { headers: requestHeaders };
-
-              // spHttpClient.get(getPermissionUrl, SPHttpClient.configurations.v1, opt).then(function (permissions) {
-              //   debugger;
-              // });
-
-              sp.web
-                .getFolderByServerRelativeUrl(data[index].ServerRelativeUrl)
-                .expand(
-                  "ListItemAllFields/RoleAssignments/Member",
-                  "ListItemAllFields/RoleAssignments/RoleDefinitionBindings",
-                  "ListItemAllFields/RoleAssignments/Member/Users"
-                )
-                .get()
-                .then((resdata) => {
-                  var roleAssignments =
-                    resdata["ListItemAllFields"].RoleAssignments;
-                  for (let i = 0; i < roleAssignments.length; i++) {
-                    const role = roleAssignments[i];
-                    for (
-                      let j = 0;
-                      j < role.RoleDefinitionBindings.length;
-                      j++
-                    ) {
-                      const definition = role.RoleDefinitionBindings[j];
-                      var bbhcpostUrl =
-                        this.props.currentContext.pageContext.web.absoluteUrl +
-                        "/_api/web/GetFolderByServerRelativeUrl(" +
-                        "'" +
-                        url +
-                        "'" +
-                        ")/ListItemAllFields/roleassignments/addroleassignment(principalid=" +
-                        role.Member.Id +
-                        ",roledefid=" +
-                        definition.Id +
-                        ")";
-                      spHttpClient
-                        .post(
-                          bbhcpostUrl,
-                          SPHttpClient.configurations.v1,
-                          spOpts
-                        )
-                        .then((response: SPHttpClientResponse) => {
-                          if (response.ok) {
-                          }
-                        });
-                    }
-                  }
-                });
-
-              var postUrl =
-                this.props.currentContext.pageContext.web.absoluteUrl +
-                "/_api/web/GetFolderByServerRelativeUrl(" +
-                "'" +
-                url +
-                "'" +
-                ")/ListItemAllFields/roleassignments/addroleassignment(principalid=" +
-                userData.Id +
-                ",roledefid=" +
-                permission +
-                ")";
-
-              spHttpClient
-                .post(postUrl, SPHttpClient.configurations.v1, spOpts)
-                .then((response: SPHttpClientResponse) => {
-                  if (response.ok) {
-                  }
-                });
+              });
             }
           }
         });
+        for (let s = 0; s < reacthandler.userDetails.length; s++) {
+          const userData = reacthandler.userDetails[s];
+          var postUrl = this.props.currentContext.pageContext.web.absoluteUrl + '/_api/web/GetFolderByServerRelativeUrl(' + "'" + url + "'" + ')/ListItemAllFields/roleassignments/addroleassignment(principalid=' + userData.Id + ',roledefid=' + permission + ')';
+          spHttpClient.post(postUrl, SPHttpClient.configurations.v1, spOpts).then((response: SPHttpClientResponse) => {
 
-      reacthandler.getFolder(
-        data[index].ServerRelativeUrl,
-        providerName,
-        year,
-        formData
-      );
-      index = index + 1;
-      if (index < data.length) {
-        reacthandler.processFolder(index, data, providerName, year, formData);
-      }
-=======
-      spHttpClient.post(queryUrl, SPHttpClient.configurations.v1, spOpts).then((response: SPHttpClientResponse) => {
-        if (response.ok) {
-          var permission = reacthandler.readPermission;
-          var sdata = serverRelativeUrl.split('/');
-          if (sdata[sdata.length - 1].toLocaleLowerCase().indexOf('upload') > 0) {
-            permission = reacthandler.contributePermission;
-          }
-          for (let s = 0; s < reacthandler.userDetails.length; s++) {
-            const userData = reacthandler.userDetails[s];
-            var postUrl = this.props.currentContext.pageContext.web.absoluteUrl + '/_api/web/GetFolderByServerRelativeUrl(' + "'" + url + "'" + ')/ListItemAllFields/roleassignments/addroleassignment(principalid=' + userData.Id + ',roledefid=' + permission + ')';
-            spHttpClient.post(postUrl, SPHttpClient.configurations.v1, spOpts).then((response: SPHttpClientResponse) => {
-              sp.web.getFolderByServerRelativeUrl(serverRelativeUrl).expand("ListItemAllFields/RoleAssignments/Member", "ListItemAllFields/RoleAssignments/RoleDefinitionBindings", "ListItemAllFields/RoleAssignments/Member/Users").get().then((resdata) => {
-                var roleAssignments = resdata["ListItemAllFields"].RoleAssignments;
-                for (let i = 0; i < roleAssignments.length; i++) {
-                  const role = roleAssignments[i];
-                  for (let j = 0; j < role.RoleDefinitionBindings.length; j++) {
-                    const definition = role.RoleDefinitionBindings[j];
-                    var bbhcpostUrl = this.props.currentContext.pageContext.web.absoluteUrl + '/_api/web/GetFolderByServerRelativeUrl(' + "'" + url + "'" + ')/ListItemAllFields/roleassignments/addroleassignment(principalid=' + role.Member.Id + ',roledefid=' + definition.Id + ')';
-                    spHttpClient.post(bbhcpostUrl, SPHttpClient.configurations.v1, spOpts).then((response: SPHttpClientResponse) => {
-
-                    });
-                  }
-                }
-              });
-            });
-          }
+          });
         }
-      });
->>>>>>> 16068cffe39ffbf1b824eae314ece3270a8f82ea
+
+        reacthandler.setpermissionsforfolders(data[index].ServerRelativeUrl, providerName, year, formData);
+        index = index + 1;
+        if (index < data.length) {
+          reacthandler.addfolderpermission(index, data, providerName, year, formData);
+        }
+
+      }
     });
+
   }
 
   createFolder = async (folderPath) => {
@@ -1317,8 +1166,8 @@ export default class Providers extends React.Component<
                 ></TextField>
               </div>
             ) : (
-              ""
-            )}
+                ""
+              )}
 
             {this.state.AllUsers.map((user, index) => {
               if (this.state.AllUsers.length == 1) {
