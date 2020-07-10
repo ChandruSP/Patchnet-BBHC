@@ -69,6 +69,17 @@ const dropDownStyles: Partial<IDropdownStyles> = {
   },
 };
 
+const dropDown2Styles: Partial<IDropdownStyles> = {
+  root: {
+    selectors: {
+      ".ms-Label": {
+        fontFamily: "Poppins, sans-serif",
+      },
+    },
+    marginLeft: "150px"
+  },
+};
+
 export default class ProviderDocuments extends React.Component<
   IProviderDocumentsProps,
   IBbhcState
@@ -474,7 +485,7 @@ export default class ProviderDocuments extends React.Component<
               options={this.state.folders}
               onChange={dropdownChange}
               style={{ width: "400px" }}
-              styles={dropDownStyles}
+              styles={dropDown2Styles}
               className={styles.input_field}
             />
           }
@@ -495,21 +506,16 @@ export default class ProviderDocuments extends React.Component<
             )}
         </div>
 
-        {/* <input
+        <input
           type="file"
           name="UploadedFile"
           id={fileId}
           onChange={(e) => this.fileUpload.call(this, e)}
-          style={{ visibility: "hidden" }}
+          style={{ display: "none" }}
           className={styles.input_field}
-        /> */}
+        />
         <Label htmlFor={fileId}>
-          <Label styles={{
-              root: {
-                padding: "5px",
-                fontFamily: "Poppins, sans-serif",
-              },
-            }}>Attach File</Label>
+          <Label style={{ padding: "5px", fontFamily: "Poppins, sans-serif", width: "150px" }}>Attach File</Label>
           <div className={styles.files_upload}>
             <Image
               styles={{ image: { padding: "5px" } }}
