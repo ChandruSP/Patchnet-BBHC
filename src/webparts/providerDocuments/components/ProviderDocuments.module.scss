@@ -1,4 +1,5 @@
-@import '~office-ui-fabric-react/dist/sass/References.scss';
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500&display=swap");
+@import "~office-ui-fabric-react/dist/sass/References.scss";
 
 .providerDocuments {
   .container {
@@ -51,7 +52,7 @@
     // Basic Button
     outline: transparent;
     position: relative;
-    font-family: "Segoe UI WestEuropean","Segoe UI",-apple-system,BlinkMacSystemFont,Roboto,"Helvetica Neue",sans-serif;
+    font-family: Poppins, sans-serif;
     -webkit-font-smoothing: antialiased;
     font-size: $ms-font-size-m;
     font-weight: $ms-font-weight-regular;
@@ -71,4 +72,45 @@
       display: inline-block;
     }
   }
+}
+.input_field {
+  margin-bottom: 10px;
+  label {
+    font-family: Poppins, sans-serif;
+    font-weight: 400;
+    font-size: 13px;
+    padding-bottom: 0;
+  }
+}
+.primary_button {
+  background-color: #3f51b5;
+  color: #fff;
+  &:hover {
+    background-color: #485bc4;
+    color: #fff;
+    box-shadow: 0 3px 5px -1px rgba(0, 0, 0, 0.2),
+      0 6px 10px 0 rgba(0, 0, 0, 0.14), 0 1px 18px 0 rgba(0, 0, 0, 0.12);
+  }
+}
+.secondary_button {
+  background-color: #f44336;
+  color: #fff;
+  &:hover {
+    background-color: #fd5246;
+    color: #fff;
+    box-shadow: 0 3px 5px -1px rgba(0, 0, 0, 0.2),
+      0 6px 10px 0 rgba(0, 0, 0, 0.14), 0 1px 18px 0 rgba(0, 0, 0, 0.12);
+  }
+}
+
+.d_flex {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.files_upload {
+  display: flex;
+  width: 300px;
+  border: 1px solid rgb(96, 94, 92);
+  margin-bottom: 20px;
 }

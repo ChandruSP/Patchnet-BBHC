@@ -15,11 +15,12 @@ import { IItemAddResult } from "@pnp/sp/items";
 
 import { PrimaryButton } from "@fluentui/react";
 import { Label } from "office-ui-fabric-react/lib/Label";
-import { Link } from 'office-ui-fabric-react/lib/Link';
+import { Link } from "office-ui-fabric-react/lib/Link";
 
 import { getId } from "office-ui-fabric-react/lib/Utilities";
 
 import "alertifyjs";
+import styles from "./ProviderDocuments.module.scss";
 
 import "../../../ExternalRef/CSS/style.css";
 import "../../../ExternalRef/CSS/alertify.min.css";
@@ -28,7 +29,6 @@ var alertify: any = require("../../../ExternalRef/JS/alertify.min.js");
 import { Image, IImageProps } from "office-ui-fabric-react/lib/Image";
 import "@pnp/sp/sputilities";
 import { IEmailProperties } from "@pnp/sp/sputilities";
-
 
 import {
   TextField,
@@ -62,13 +62,12 @@ export interface IBbhcState {
 export default class ProviderDocuments extends React.Component<
   IProviderDocumentsProps,
   IBbhcState
-  > {
+> {
   currentYear = new Date().getFullYear();
   rootFolder = "Providers Library";
   templateLibrary = "TemplateLibrary";
-  generalSubmission = 'general submission';
+  generalSubmission = "general submission";
   generalSubmissionChanged = false;
-
 
   constructor(props) {
     super(props);
@@ -89,7 +88,7 @@ export default class ProviderDocuments extends React.Component<
       fileName: "",
       notes: "",
       previousyeardata: [],
-      allProviders: []
+      allProviders: [],
     };
     this.getProviderMetaData();
   }
@@ -101,8 +100,8 @@ export default class ProviderDocuments extends React.Component<
       .items.select("Title", "ContractId", "TemplateType")
       .filter(
         "substringof('" +
-        this.props.currentContext.pageContext.user.email.toLowerCase() +
-        "',Users)"
+          this.props.currentContext.pageContext.user.email.toLowerCase() +
+          "',Users)"
       )
       .get()
       .then((res) => {
@@ -118,13 +117,29 @@ export default class ProviderDocuments extends React.Component<
           var dataLoaded = false;
           for (let j = 0; j < res.length; j++) {
             const providerData = res[j];
-            var contract = providerData.ContractId.substr(providerData.ContractId.length - 2, 2);
+            var contract = providerData.ContractId.substr(
+              providerData.ContractId.length - 2,
+              2
+            );
             if (contract != stryear.toString().substr(2, 2)) {
               var nextyear = parseInt(contract) + 1;
               var currentyearprefix = that.currentYear.toString().substr(0, 2);
               previousyeardata.push({
-                Title: "FY " + (currentyearprefix + contract) + "-" + (currentyearprefix + nextyear),
-                URL: that.props.siteUrl + "/" + this.rootFolder + "/FY " + (currentyearprefix + contract) + "-" + (currentyearprefix + nextyear) + "/" + providerData.Title
+                Title:
+                  "FY " +
+                  (currentyearprefix + contract) +
+                  "-" +
+                  (currentyearprefix + nextyear),
+                URL:
+                  that.props.siteUrl +
+                  "/" +
+                  this.rootFolder +
+                  "/FY " +
+                  (currentyearprefix + contract) +
+                  "-" +
+                  (currentyearprefix + nextyear) +
+                  "/" +
+                  providerData.Title,
               });
             } else {
               if (!dataLoaded) {
@@ -133,11 +148,14 @@ export default class ProviderDocuments extends React.Component<
               }
               allProviders.push({
                 key: providerData.Title,
-                text: providerData.Title
+                text: providerData.Title,
               });
             }
           }
-          that.setState({ previousyeardata: previousyeardata, allProviders: allProviders });
+          that.setState({
+            previousyeardata: previousyeardata,
+            allProviders: allProviders,
+          });
         } else {
           that.setState({ folders: [] });
         }
@@ -155,8 +173,8 @@ export default class ProviderDocuments extends React.Component<
         var allFolders = that.state.folders;
         allFolders = [];
         for (let index = 0; index < res.length; index++) {
-          var cleartext = res[index].Title.replace(' - Upload', '');
-          var url = cleartext.replace(' - ', '/');
+          var cleartext = res[index].Title.replace(" - Upload", "");
+          var url = cleartext.replace(" - ", "/");
           allFolders.push({
             key: url,
             text: cleartext,
@@ -243,59 +261,78 @@ export default class ProviderDocuments extends React.Component<
       }
       var selectedPath = this.state.selectedPath;
       if (selectedPath) {
-        if (selectedPath.toLocaleLowerCase().indexOf(this.generalSubmission) > 0) {
+        if (
+          selectedPath.toLocaleLowerCase().indexOf(this.generalSubmission) > 0
+        ) {
           if (!this.state.notes) {
-            alertify.error('Notes is required');
+            alertify.error("Notes is required");
             return;
           }
         }
         var currentMonth = new Date().getMonth() + 1;
         var stryear = this.currentYear + "-" + (this.currentYear + 1);
         if (currentMonth < 7) {
-          stryear = (this.currentYear - 1) + "-" + this.currentYear;
+          stryear = this.currentYear - 1 + "-" + this.currentYear;
         }
         var folderName = "FY " + stryear + "/" + this.state.selectedProvider;
 
-        var folderPath = this.rootFolder + "/" + folderName + "/" + selectedPath;
+        var folderPath =
+          this.rootFolder + "/" + folderName + "/" + selectedPath;
         var that = this;
         sp.web
           .getFolderByServerRelativeUrl(folderPath)
           .files.add(that.state.file.name, that.state.file, true)
           .then(function (result) {
-            if (selectedPath.toLocaleLowerCase().indexOf(that.generalSubmission) > 0) {
+            if (
+              selectedPath.toLocaleLowerCase().indexOf(that.generalSubmission) >
+              0
+            ) {
               result.file.listItemAllFields.get().then(function (fileData) {
-                sp.web.lists.getByTitle(that.rootFolder).items.getById(fileData.Id).update({ FileNotes: that.state.notes }).then(function () {
-
-                  sp.web.lists
-                    .getByTitle("EmailConfig")
-                    .items
-                    .get()
-                    .then((res) => {
-                      var filepath = that.props.currentContext.pageContext.web.absoluteUrl + '/' + folderPath + that.state.file.name;
-                      var to = res[0].To.split(';');
-                      var cc = [];
-                      if (res[0].CC) {
-                        cc = res[0].CC.split(';');
-                      }
-                      var bcc = [];
-                      if (res[0].BCC) {
-                        bcc = res[0].BCC.split(';');
-                      }
-                      const emailProps: IEmailProperties = {
-                        To: to,
-                        CC: cc,
-                        BCC: bcc,
-                        Subject: res[0].Subject,
-                        Body: "New file is uploaded in the general submission folder for the <a href='" + filepath + "'>" + that.state.selectedProvider + "</a> provider.\n\nNotes : " + that.state.notes,
-                        AdditionalHeaders: {
-                          "content-type": "text/html"
+                sp.web.lists
+                  .getByTitle(that.rootFolder)
+                  .items.getById(fileData.Id)
+                  .update({ FileNotes: that.state.notes })
+                  .then(function () {
+                    sp.web.lists
+                      .getByTitle("EmailConfig")
+                      .items.get()
+                      .then((res) => {
+                        var filepath =
+                          that.props.currentContext.pageContext.web
+                            .absoluteUrl +
+                          "/" +
+                          folderPath +
+                          that.state.file.name;
+                        var to = res[0].To.split(";");
+                        var cc = [];
+                        if (res[0].CC) {
+                          cc = res[0].CC.split(";");
                         }
-                      };
-                      sp.utility.sendEmail(emailProps);
-                    });
+                        var bcc = [];
+                        if (res[0].BCC) {
+                          bcc = res[0].BCC.split(";");
+                        }
+                        const emailProps: IEmailProperties = {
+                          To: to,
+                          CC: cc,
+                          BCC: bcc,
+                          Subject: res[0].Subject,
+                          Body:
+                            "New file is uploaded in the general submission folder for the <a href='" +
+                            filepath +
+                            "'>" +
+                            that.state.selectedProvider +
+                            "</a> provider.\n\nNotes : " +
+                            that.state.notes,
+                          AdditionalHeaders: {
+                            "content-type": "text/html",
+                          },
+                        };
+                        sp.utility.sendEmail(emailProps);
+                      });
 
-                  alertify.success("File uploaded successfully");
-                })
+                    alertify.success("File uploaded successfully");
+                  });
               });
             } else {
               alertify.success("File uploaded successfully");
@@ -311,7 +348,7 @@ export default class ProviderDocuments extends React.Component<
 
   inputChangeHandler(e) {
     this.setState({
-      notes: e.target.value
+      notes: e.target.value,
     });
   }
 
@@ -352,7 +389,6 @@ export default class ProviderDocuments extends React.Component<
     //   }
     // };
 
-
     const dropdownChange = (
       event: React.FormEvent<HTMLDivElement>,
       item: IDropdownOption
@@ -385,19 +421,18 @@ export default class ProviderDocuments extends React.Component<
       this.setState({ selectedProvider: item.key.toString() });
     };
 
-
     return (
       <div>
         <h2>Add File</h2>
-        <div>
-
+        <div className={styles.d_flex}>
           {
             <Dropdown
               placeholder="Select an provider"
               label="Providers"
               options={this.state.allProviders}
               onChange={providerChange}
-              style={{ width: "700px" }}
+              style={{ width: "300px" }}
+              className={styles.input_field}
             />
           }
 
@@ -407,35 +442,38 @@ export default class ProviderDocuments extends React.Component<
               label="Submission Types"
               options={this.state.folders}
               onChange={dropdownChange}
-              style={{ width: "700px" }}
+              style={{ width: "400px" }}
+              className={styles.input_field}
             />
-
           }
 
-          {
-            this.state.selectedPath.toLocaleLowerCase().indexOf(this.generalSubmission) > 0 ?
-              <TextField
-                label="Notes"
-                width="100px"
-                onChange={(e) => this.inputChangeHandler.call(this, e)}
-                value={this.state.notes}
-                name="notes"
-              ></TextField>
-              : ""
-          }
-
+          {this.state.selectedPath
+            .toLocaleLowerCase()
+            .indexOf(this.generalSubmission) > 0 ? (
+            <TextField
+              label="Notes"
+              width="100px"
+              onChange={(e) => this.inputChangeHandler.call(this, e)}
+              value={this.state.notes}
+              name="notes"
+              className={styles.input_field}
+            ></TextField>
+          ) : (
+            ""
+          )}
         </div>
 
-        <input
+        {/* <input
           type="file"
           name="UploadedFile"
           id={fileId}
           onChange={(e) => this.fileUpload.call(this, e)}
           style={{ visibility: "hidden" }}
-        />
+          className={styles.input_field}
+        /> */}
         <Label htmlFor={fileId}>
           <Label styles={{ root: { padding: "5px" } }}>Attach File</Label>
-          <div style={{ display: "flex" }}>
+          <div className={styles.files_upload}>
             <Image
               styles={{ image: { padding: "5px" } }}
               src={require("./Attach.png")}
@@ -445,14 +483,23 @@ export default class ProviderDocuments extends React.Component<
         </Label>
 
         <div>
-          {
-            this.state.previousyeardata.map((provider) => {
-              return <div><Link href={provider.URL} target="_blank">{provider.Title}</Link><br></br></div>
-            })
-          }
+          {this.state.previousyeardata.map((provider) => {
+            return (
+              <div>
+                <Link href={provider.URL} target="_blank">
+                  {provider.Title}
+                </Link>
+                <br></br>
+              </div>
+            );
+          })}
         </div>
 
-        <PrimaryButton text="Upload" onClick={this.uploadFile.bind(this)} />
+        <PrimaryButton
+          text="Upload"
+          onClick={this.uploadFile.bind(this)}
+          className={styles.primary_button}
+        />
       </div>
     );
   }

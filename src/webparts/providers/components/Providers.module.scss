@@ -55,8 +55,7 @@ body {
     // Basic Button
     outline: transparent;
     position: relative;
-    font-family: "Segoe UI WestEuropean", "Segoe UI", -apple-system,
-      BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif;
+    font-family: Poppins, sans-serif;
     -webkit-font-smoothing: antialiased;
     font-size: $ms-font-size-m;
     font-weight: $ms-font-weight-regular;
@@ -144,7 +143,9 @@ body {
   }
 }
 .heading_01 {
-  font-weight: 18px;
+  font-size: 18px;
+  font-weight: 500;
+  font-family: Poppins, sans-serif;
 }
 .checkbox_label {
   label {
@@ -170,4 +171,9 @@ body {
   align-items: center;
   justify-content: space-between;
   margin-bottom: 20px;
+}
+.cellName-230 {
+  font-size: 14px;
+  font-weight: 600;
+  color: red;
 }

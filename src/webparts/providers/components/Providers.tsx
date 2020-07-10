@@ -17,6 +17,7 @@ import {
   DetailsListLayoutMode,
   Selection,
   IColumn,
+  IDetailsListStyles,
 } from "office-ui-fabric-react/lib/DetailsList";
 import { MarqueeSelection } from "office-ui-fabric-react/lib/MarqueeSelection";
 import { Fabric } from "office-ui-fabric-react/lib/Fabric";
@@ -1059,7 +1060,24 @@ export default class Providers extends React.Component<
         // width: 600,
       },
     };
-
+    const gridStyles: Partial<IDetailsListStyles> = {
+      headerWrapper: [
+        {
+          selectors: {
+            ".ms-DetailsHeader-cell": {
+              backgroundColor: "rgb(243, 242, 241)",
+              fontFamily: "Poppins, sans-serif",
+              marginTop: 3,
+              fontSize: "15px",
+              fontWeight: 500,
+            },
+            ".cellName-230": {
+              fontWeight: 500,
+            },
+          },
+        },
+      ],
+    };
     const columnstyle: Partial<IStackProps> = {
       tokens: {
         childrenGap: 5,
@@ -1144,13 +1162,18 @@ export default class Providers extends React.Component<
       },
     };
     const choisestyle: Partial<IChoiceGroupStyles> = {
+      label: {
+        fontFamily: "Poppins, sans-serif",
+      },
       flexContainer: [
         {
           marginTop: -5,
           marginBottom: 5,
           selectors: {
             ".ms-ChoiceField": {
+              fontFamily: "Poppins, sans-serif",
               marginTop: 3,
+              fontSize: "13px",
             },
           },
         },
@@ -1240,6 +1263,7 @@ export default class Providers extends React.Component<
                 checkButtonAriaLabel="Row checkbox"
                 onItemInvoked={this._onItemInvoked}
                 onRenderItemColumn={_renderItemColumn}
+                styles={gridStyles}
               />
             </MarqueeSelection>
           </div>
