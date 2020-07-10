@@ -146,7 +146,7 @@ export interface IDetailsListBasicExampleState {
 export default class Providers extends React.Component<
   IProvidersProp,
   IDetailsListBasicExampleState
-> {
+  > {
   private _selection: Selection;
   private _columns: IColumn[];
 
@@ -287,7 +287,7 @@ export default class Providers extends React.Component<
     var that = this;
     sp.web.lists
       .getByTitle("ProviderDetails")
-      .items.select(
+      .items.orderBy("Id", false).select(
         "Title",
         "LegalName",
         "ProviderID",
@@ -346,8 +346,8 @@ export default class Providers extends React.Component<
     this.setState({
       items: text
         ? this.state.allItems.filter(
-            (i) => i.Title.toLowerCase().indexOf(text) > -1
-          )
+          (i) => i.Title.toLowerCase().indexOf(text) > -1
+        )
         : this.state.allItems,
     });
   };
@@ -475,13 +475,6 @@ export default class Providers extends React.Component<
               false
             );
           }
-        }
-      }
-    } else {
-      for (let index = 0; index < this.state.AllUsers.length; index++) {
-        const user = this.state.AllUsers[index];
-        if (user) {
-          // that.setpermissionformaintemplate("TemplateLibrary/" + this.state.formData.TemplateType, user);
         }
       }
     }
@@ -651,6 +644,7 @@ export default class Providers extends React.Component<
         .update(formData)
         .then((res) => {
           alertify.success("Provider updated");
+          that.setrootfolderpermission("TemplateLibrary/" + formData.TemplateType, formData.Title, year)
           that.loadTableData();
           that.setState({ hideDialog: true });
         });
@@ -692,6 +686,7 @@ export default class Providers extends React.Component<
         formData
       );
       setTimeout(() => {
+        reacthandler.setrootfolderpermission("TemplateLibrary/" + formData.TemplateType, providerName, year);
         reacthandler.setpermissionsforfolders(
           "TemplateLibrary/" + formData.TemplateType,
           providerName,
@@ -703,6 +698,83 @@ export default class Providers extends React.Component<
     alertify.success("Provider is created");
     reacthandler.setState({ hideDialog: true });
   };
+
+
+  setrootfolderpermission = (templateLibrary, providerName, year) => {
+    var reacthandler = this;
+    var currentMonth = new Date().getMonth() + 1;
+    var stryear = year + "-" + (year + 1);
+    if (currentMonth < 7) {
+      stryear = year - 1 + "-" + year;
+    }
+    var folderPath = reacthandler.rootFolder + "/" + "FY " + stryear + "/" + providerName;
+
+    const spHttpClient: SPHttpClient = this.props.currentContext.spHttpClient;
+    var queryUrl =
+      this.props.currentContext.pageContext.web.absoluteUrl +
+      "/_api/web/GetFolderByServerRelativeUrl(" +
+      "'" +
+      folderPath +
+      "'" +
+      ")/ListItemAllFields/breakroleinheritance(false)";
+    const spOpts: ISPHttpClientOptions = {};
+    spHttpClient
+      .post(queryUrl, SPHttpClient.configurations.v1, spOpts)
+      .then((response: SPHttpClientResponse) => {
+        if (response.ok) {
+          var permission = reacthandler.readPermission;
+          sp.web
+            .getFolderByServerRelativeUrl(templateLibrary)
+            .expand(
+              "ListItemAllFields/RoleAssignments/Member",
+              "ListItemAllFields/RoleAssignments/RoleDefinitionBindings",
+              "ListItemAllFields/RoleAssignments/Member/Users"
+            )
+            .get()
+            .then((resdata) => {
+              var roleAssignments =
+                resdata["ListItemAllFields"].RoleAssignments;
+              for (let i = 0; i < roleAssignments.length; i++) {
+                const role = roleAssignments[i];
+                for (let j = 0; j < role.RoleDefinitionBindings.length; j++) {
+                  const definition = role.RoleDefinitionBindings[j];
+                  var bbhcpostUrl =
+                    this.props.currentContext.pageContext.web.absoluteUrl +
+                    "/_api/web/GetFolderByServerRelativeUrl(" +
+                    "'" +
+                    folderPath +
+                    "'" +
+                    ")/ListItemAllFields/roleassignments/addroleassignment(principalid=" +
+                    role.Member.Id +
+                    ",roledefid=" +
+                    definition.Id +
+                    ")";
+                  spHttpClient
+                    .post(bbhcpostUrl, SPHttpClient.configurations.v1, spOpts)
+                    .then((response: SPHttpClientResponse) => { });
+                }
+              }
+            });
+          for (let s = 0; s < reacthandler.userDetails.length; s++) {
+            const userData = reacthandler.userDetails[s];
+            var postUrl =
+              this.props.currentContext.pageContext.web.absoluteUrl +
+              "/_api/web/GetFolderByServerRelativeUrl(" +
+              "'" +
+              folderPath +
+              "'" +
+              ")/ListItemAllFields/roleassignments/addroleassignment(principalid=" +
+              userData.Id +
+              ",roledefid=" +
+              permission +
+              ")";
+            spHttpClient
+              .post(postUrl, SPHttpClient.configurations.v1, spOpts)
+              .then((response: SPHttpClientResponse) => { });
+          }
+        }
+      });
+  }
 
   getFolder = (folderPath, providerName, year, formData) => {
     var reacthandler = this;
@@ -831,7 +903,7 @@ export default class Providers extends React.Component<
                     ")";
                   spHttpClient
                     .post(bbhcpostUrl, SPHttpClient.configurations.v1, spOpts)
-                    .then((response: SPHttpClientResponse) => {});
+                    .then((response: SPHttpClientResponse) => { });
                 }
               }
             });
@@ -850,7 +922,7 @@ export default class Providers extends React.Component<
               ")";
             spHttpClient
               .post(postUrl, SPHttpClient.configurations.v1, spOpts)
-              .then((response: SPHttpClientResponse) => {});
+              .then((response: SPHttpClientResponse) => { });
           }
 
           reacthandler.setpermissionsforfolders(
@@ -1324,8 +1396,8 @@ export default class Providers extends React.Component<
                 ></TextField>
               </div>
             ) : (
-              ""
-            )}
+                ""
+              )}
 
             {this.state.AllUsers.map((user, index) => {
               if (this.state.AllUsers.length == 1) {

@@ -57,12 +57,13 @@ export interface IBbhcState {
   fileName: "";
   previousyeardata: any[];
   allProviders: any[];
+  allData: any[];
 }
 
 export default class ProviderDocuments extends React.Component<
   IProviderDocumentsProps,
   IBbhcState
-> {
+  > {
   currentYear = new Date().getFullYear();
   rootFolder = "Providers Library";
   templateLibrary = "TemplateLibrary";
@@ -89,6 +90,7 @@ export default class ProviderDocuments extends React.Component<
       notes: "",
       previousyeardata: [],
       allProviders: [],
+      allData: []
     };
     this.getProviderMetaData();
   }
@@ -100,8 +102,8 @@ export default class ProviderDocuments extends React.Component<
       .items.select("Title", "ContractId", "TemplateType")
       .filter(
         "substringof('" +
-          this.props.currentContext.pageContext.user.email.toLowerCase() +
-          "',Users)"
+        this.props.currentContext.pageContext.user.email.toLowerCase() +
+        "',Users)"
       )
       .get()
       .then((res) => {
@@ -113,10 +115,11 @@ export default class ProviderDocuments extends React.Component<
           }
           var previousyeardata = that.state.previousyeardata;
           var allProviders = that.state.allProviders;
-
+          var allData = that.state.allData;
           var dataLoaded = false;
           for (let j = 0; j < res.length; j++) {
             const providerData = res[j];
+            allData.push(providerData);
             var contract = providerData.ContractId.substr(
               providerData.ContractId.length - 2,
               2
@@ -144,7 +147,6 @@ export default class ProviderDocuments extends React.Component<
             } else {
               if (!dataLoaded) {
                 dataLoaded = true;
-                that.loadUploadFolders(providerData.TemplateType);
               }
               allProviders.push({
                 key: providerData.Title,
@@ -155,6 +157,7 @@ export default class ProviderDocuments extends React.Component<
           that.setState({
             previousyeardata: previousyeardata,
             allProviders: allProviders,
+            allData: allData
           });
         } else {
           that.setState({ folders: [] });
@@ -172,13 +175,24 @@ export default class ProviderDocuments extends React.Component<
       .then((res) => {
         var allFolders = that.state.folders;
         allFolders = [];
+        var generalSub = null;
         for (let index = 0; index < res.length; index++) {
           var cleartext = res[index].Title.replace(" - Upload", "");
           var url = cleartext.replace(" - ", "/");
-          allFolders.push({
-            key: url,
-            text: cleartext,
-          });
+          if (cleartext != "General Submissions") {
+            allFolders.push({
+              key: url,
+              text: cleartext,
+            });
+          } else {
+            generalSub = {
+              key: url,
+              text: cleartext,
+            };
+          }
+        }
+        if (generalSub) {
+          allFolders.push(generalSub);
         }
         that.setState({ folders: allFolders });
       });
@@ -329,13 +343,15 @@ export default class ProviderDocuments extends React.Component<
                           },
                         };
                         sp.utility.sendEmail(emailProps);
+                        alertify.success("File uploaded successfully");
+                        location.reload();
                       });
 
-                    alertify.success("File uploaded successfully");
                   });
               });
             } else {
               alertify.success("File uploaded successfully");
+              location.reload();
             }
           });
       } else {
@@ -393,24 +409,24 @@ export default class ProviderDocuments extends React.Component<
       event: React.FormEvent<HTMLDivElement>,
       item: IDropdownOption
     ): void => {
-      if (!this.generalSubmissionChanged) {
-        this.generalSubmissionChanged = true;
-        var folders = this.state.folders;
-        var gindex = -1;
-        for (let index = 0; index < folders.length; index++) {
-          const folder = folders[index];
-          if (folder.text == "General Submissions") {
-            gindex = index;
-            break;
-          }
-        }
-        if (gindex >= 0) {
-          var data = folders[gindex];
-          folders.splice(gindex, 1);
-          folders.splice(folders.length, 0, data);
-          this.setState({ folders: folders });
-        }
-      }
+      // if (!this.generalSubmissionChanged) {
+      //   this.generalSubmissionChanged = true;
+      //   var folders = this.state.folders;
+      //   var gindex = -1;
+      //   for (let index = 0; index < folders.length; index++) {
+      //     const folder = folders[index];
+      //     if (folder.text == "General Submissions") {
+      //       gindex = index;
+      //       break;
+      //     }
+      //   }
+      //   if (gindex >= 0) {
+      //     var data = folders[gindex];
+      //     folders.splice(gindex, 1);
+      //     folders.splice(folders.length, 0, data);
+      //     this.setState({ folders: folders });
+      //   }
+      // }
       this.setState({ selectedPath: item.key.toString() });
     };
 
@@ -418,7 +434,12 @@ export default class ProviderDocuments extends React.Component<
       event: React.FormEvent<HTMLDivElement>,
       item: IDropdownOption
     ): void => {
-      this.setState({ selectedProvider: item.key.toString() });
+      var providerName = item.key.toString();
+      var data = this.state.allData.filter(c => c.Title == providerName);
+      if (data.length > 0) {
+        this.loadUploadFolders(data[0].TemplateType);
+      }
+      this.setState({ selectedProvider: providerName });
     };
 
     return (
@@ -450,17 +471,17 @@ export default class ProviderDocuments extends React.Component<
           {this.state.selectedPath
             .toLocaleLowerCase()
             .indexOf(this.generalSubmission) > 0 ? (
-            <TextField
-              label="Notes"
-              width="100px"
-              onChange={(e) => this.inputChangeHandler.call(this, e)}
-              value={this.state.notes}
-              name="notes"
-              className={styles.input_field}
-            ></TextField>
-          ) : (
-            ""
-          )}
+              <TextField
+                label="Notes"
+                width="100px"
+                onChange={(e) => this.inputChangeHandler.call(this, e)}
+                value={this.state.notes}
+                name="notes"
+                className={styles.input_field}
+              ></TextField>
+            ) : (
+              ""
+            )}
         </div>
 
         {/* <input
