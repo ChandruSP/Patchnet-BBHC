@@ -97,7 +97,8 @@ const exampleChildClass = mergeStyles({
 });
 
 const textFieldStyles: Partial<ITextFieldStyles> = {
-  root: { maxWidth: "100%" },
+ 
+  root: { maxWidth: "100%", fontFamily: "Poppins, sans-serif" },
 };
 
 const currentYear = new Date().getFullYear();
@@ -1149,6 +1150,15 @@ export default class Providers extends React.Component<
           },
         },
       ],
+      contentWrapper: [
+        {
+          selectors: {
+            ".ms-DetailsRow": {
+              fontFamily: "Poppins, sans-serif",
+            },
+          },
+        },
+      ],
     };
     const columnstyle: Partial<IStackProps> = {
       tokens: {
@@ -1229,6 +1239,7 @@ export default class Providers extends React.Component<
             borderWidth: 0,
             marginRight: 5,
             marginLeft: 5,
+            fontFamily: "Poppins, sans-serif",
           },
         },
       },
@@ -1252,14 +1263,19 @@ export default class Providers extends React.Component<
       ],
     };
     const dialogStyles: Partial<IDialogStyles> = {
-      root: {
-        selectors: {
-          ".ms-Dialog-title": {
-            paddingTop: 0,
-            paddingBottom: 10,
+      main: [
+        {
+          fontFamily: "Poppins, sans-serif",
+          selectors: {
+            ".ms-Dialog-title": {
+              fontFamily: "Poppins, sans-serif",
+            },
+            ".ms-Dialog-subText": {
+              fontFamily: "Poppins, sans-serif",
+            },
           },
         },
-      },
+      ],
     };
     // const labelId: string = useId('dialogLabel');
     // const subTextId: string = useId('subTextLabel');

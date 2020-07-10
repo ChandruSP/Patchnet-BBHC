@@ -75,6 +75,7 @@
 }
 .input_field {
   margin-bottom: 10px;
+  font-family: Poppins, sans-serif;
   label {
     font-family: Poppins, sans-serif;
     font-weight: 400;
@@ -85,6 +86,7 @@
 .primary_button {
   background-color: #3f51b5;
   color: #fff;
+  font-family: Poppins, sans-serif !important;
   &:hover {
     background-color: #485bc4;
     color: #fff;

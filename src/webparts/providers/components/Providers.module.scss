@@ -102,6 +102,7 @@ body {
 }
 .input_field {
   margin-bottom: 10px;
+  font-family: Poppins, sans-serif;
   label {
     font-family: Poppins, sans-serif;
     font-weight: 400;
@@ -112,6 +113,7 @@ body {
 .button_primary {
   background-color: #3f51b5;
   color: #fff;
+  font-family: Poppins, sans-serif !important;
 
   &:hover {
     background-color: #485bc4;
@@ -119,6 +121,9 @@ body {
     box-shadow: 0 3px 5px -1px rgba(0, 0, 0, 0.2),
       0 6px 10px 0 rgba(0, 0, 0, 0.14), 0 1px 18px 0 rgba(0, 0, 0, 0.12);
   }
+}
+.button_default {
+  font-family: Poppins, sans-serif !important;
 }
 .primary_button {
   background-color: #3f51b5;
@@ -171,6 +176,7 @@ body {
   align-items: center;
   justify-content: space-between;
   margin-bottom: 20px;
+  font-family: Poppins, sans-serif;
 }
 .cellName-230 {
   font-size: 14px;

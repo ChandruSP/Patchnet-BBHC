@@ -59,6 +59,15 @@ export interface IBbhcState {
   allProviders: any[];
   allData: any[];
 }
+const dropDownStyles: Partial<IDropdownStyles> = {
+  root: {
+    selectors: {
+      ".ms-Label": {
+        fontFamily: "Poppins, sans-serif",
+      },
+    },
+  },
+};
 
 export default class ProviderDocuments extends React.Component<
   IProviderDocumentsProps,
@@ -444,7 +453,7 @@ export default class ProviderDocuments extends React.Component<
 
     return (
       <div>
-        <h2>Add File</h2>
+        <h2 style={{ fontFamily: "Poppins, sans-serif" }}>Add File</h2>
         <div className={styles.d_flex}>
           {
             <Dropdown
@@ -453,6 +462,7 @@ export default class ProviderDocuments extends React.Component<
               options={this.state.allProviders}
               onChange={providerChange}
               style={{ width: "300px" }}
+              styles={dropDownStyles}
               className={styles.input_field}
             />
           }
@@ -464,6 +474,7 @@ export default class ProviderDocuments extends React.Component<
               options={this.state.folders}
               onChange={dropdownChange}
               style={{ width: "400px" }}
+              styles={dropDownStyles}
               className={styles.input_field}
             />
           }
@@ -493,7 +504,12 @@ export default class ProviderDocuments extends React.Component<
           className={styles.input_field}
         /> */}
         <Label htmlFor={fileId}>
-          <Label styles={{ root: { padding: "5px" } }}>Attach File</Label>
+          <Label styles={{
+              root: {
+                padding: "5px",
+                fontFamily: "Poppins, sans-serif",
+              },
+            }}>Attach File</Label>
           <div className={styles.files_upload}>
             <Image
               styles={{ image: { padding: "5px" } }}
