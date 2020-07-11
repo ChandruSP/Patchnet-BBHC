@@ -195,7 +195,7 @@ export default class Providers extends React.Component<
       });
 
     sp.web.roleDefinitions
-      .getByName("Contribute")
+      .getByName("Read-Only-Upload")
       .get()
       .then(function (res) {
         that.contributePermission = res.Id;
