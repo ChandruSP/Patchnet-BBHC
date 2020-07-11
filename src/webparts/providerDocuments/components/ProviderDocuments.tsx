@@ -295,9 +295,7 @@ export default class ProviderDocuments extends React.Component<
       }
       var selectedPath = this.state.selectedPath;
       if (selectedPath) {
-        if (
-          selectedPath.toLocaleLowerCase().indexOf(this.generalSubmission) > 0
-        ) {
+        if (selectedPath.toLocaleLowerCase().indexOf(this.generalSubmission) >= 0) {
           if (!this.state.notes) {
             alertify.error("Notes is required");
             return;
@@ -317,10 +315,7 @@ export default class ProviderDocuments extends React.Component<
           .getFolderByServerRelativeUrl(folderPath)
           .files.add(that.state.file.name, that.state.file, true)
           .then(function (result) {
-            if (
-              selectedPath.toLocaleLowerCase().indexOf(that.generalSubmission) >
-              0
-            ) {
+            if (selectedPath.toLocaleLowerCase().indexOf(that.generalSubmission) >= 0) {
               result.file.listItemAllFields.get().then(function (fileData) {
                 sp.web.lists
                   .getByTitle(that.rootFolder)
@@ -335,7 +330,7 @@ export default class ProviderDocuments extends React.Component<
                           that.props.currentContext.pageContext.web
                             .absoluteUrl +
                           "/" +
-                          folderPath +
+                          folderPath + "/" +
                           that.state.file.name;
                         var to = res[0].To.split(";");
                         var cc = [];
@@ -492,7 +487,7 @@ export default class ProviderDocuments extends React.Component<
 
           {this.state.selectedPath
             .toLocaleLowerCase()
-            .indexOf(this.generalSubmission) > 0 ? (
+            .indexOf(this.generalSubmission) >= 0 ? (
               <TextField
                 label="Notes"
                 width="100px"

@@ -97,7 +97,7 @@ const exampleChildClass = mergeStyles({
 });
 
 const textFieldStyles: Partial<ITextFieldStyles> = {
- 
+
   root: { maxWidth: "100%", fontFamily: "Poppins, sans-serif" },
 };
 
@@ -151,6 +151,10 @@ export default class Providers extends React.Component<
   private _selection: Selection;
   private _columns: IColumn[];
 
+  newAddedUsers = [];
+  deletedUsers = [];
+  allUploadFolders = [];
+
   selUsers = [];
   allUsers = [];
   fileObj = null;
@@ -197,6 +201,20 @@ export default class Providers extends React.Component<
         that.contributePermission = res.Id;
       });
 
+
+    sp.web.lists
+      .getByTitle("UploadFolders")
+      .items.select("Title", "TemplateType")
+      .get()
+      .then((res) => {
+        that.allUploadFolders = [];
+        for (let u = 0; u < res.length; u++) {
+          that.allUploadFolders.push({
+            Title: res[u].Title,
+            TemplateType: res[u].TemplateType,
+          });
+        }
+      });
     this.currentUser = sp.web.currentUser();
 
     this._selection = new Selection({
@@ -443,6 +461,9 @@ export default class Providers extends React.Component<
       }
     }
 
+    this.newAddedUsers = [];
+    this.deletedUsers = [];
+
     if (this.state.editUsers) {
       var existingUsers = this.state.editUsers.split(";");
       var newUsers = this.state.formData.Users.split(";");
@@ -451,6 +472,7 @@ export default class Providers extends React.Component<
         if (newUsers[index]) {
           var exist = existingUsers.filter((c) => c == newUsers[index]);
           if (exist.length == 0) {
+            this.newAddedUsers.push(newUsers[index]);
             that.setpermissionfornewuser(
               "TemplateLibrary/" + that.state.formData.TemplateType,
               newUsers[index],
@@ -470,6 +492,7 @@ export default class Providers extends React.Component<
         if (existingUsers[j]) {
           var removeuser = newUsers.filter((c) => c == existingUsers[j]);
           if (removeuser.length == 0) {
+            this.deletedUsers.push(existingUsers[j]);
             that.setpermissionfornewuser(
               "TemplateLibrary/" + that.state.formData.TemplateType,
               existingUsers[j],
@@ -545,10 +568,18 @@ export default class Providers extends React.Component<
             if (response.ok) {
               var permission = reacthandler.readPermission;
               var sdata = clonedUrl.split("/");
-              if (
-                sdata[sdata.length - 1].toLocaleLowerCase().indexOf("upload") >
-                0
-              ) {
+
+              var folderFilter = reacthandler.allUploadFolders.filter(c => c.TemplateType == reacthandler.state.formData.TemplateType);
+              var found = false;
+              for (let l = 0; l < folderFilter.length; l++) {
+                const fold = folderFilter[l].Title.split(' - ');
+                if (fold[fold.length - 1] == sdata[sdata.length - 1]) {
+                  found = true;
+                  break;
+                }
+              }
+
+              if (found) {
                 permission = reacthandler.contributePermission;
               }
 
@@ -639,6 +670,33 @@ export default class Providers extends React.Component<
         new Date() +
         "\nUpdated by : " +
         this.props.currentContext.pageContext.user.displayName;
+
+      var newUsersAdded = null;
+      if (this.newAddedUsers.length > 0) {
+        newUsersAdded = '\nNew user(s) added : ';
+        for (let u = 0; u < this.newAddedUsers.length; u++) {
+          const user = this.newAddedUsers[u];
+          newUsersAdded = newUsersAdded + user + "; "
+        }
+      }
+
+      var deletededUser = null;
+      if (this.deletedUsers.length > 0) {
+        deletededUser = '\nUser(s) deleted : ';
+        for (let d = 0; d < this.deletedUsers.length; d++) {
+          const user = this.deletedUsers[d];
+          deletededUser = deletededUser + user + "; "
+        }
+      }
+
+      if (newUsersAdded) {
+        formData.Logs = formData.Logs + newUsersAdded;
+      }
+      if (deletededUser) {
+        formData.Logs = formData.Logs + deletededUser;
+      }
+
+
       sp.web.lists
         .getByTitle("ProviderDetails")
         .items.getById(formData.Id)
@@ -655,12 +713,15 @@ export default class Providers extends React.Component<
       if (currentMonth < 7) {
         stryear = (currentYear - 1).toString().substr(2, 2);
       }
+
+
       formData.ContractId = formData.ContractId + "-" + stryear;
       formData.Logs =
         "Added on : " +
         new Date() +
         "\nAdded by : " +
         this.props.currentContext.pageContext.user.displayName;
+
       sp.web.lists
         .getByTitle("ProviderDetails")
         .items.add(formData)
@@ -870,9 +931,18 @@ export default class Providers extends React.Component<
         if (response.ok) {
           var permission = reacthandler.readPermission;
           var sdata = serverRelativeUrl.split("/");
-          if (
-            sdata[sdata.length - 1].toLocaleLowerCase().indexOf("upload") > 0
-          ) {
+
+          var folderFilter = reacthandler.allUploadFolders.filter(c => c.TemplateType == formData.TemplateType);
+          var found = false;
+          for (let l = 0; l < folderFilter.length; l++) {
+            const fold = folderFilter[l].Title.split(' - ');
+            if (fold[fold.length - 1] == sdata[sdata.length - 1]) {
+              found = true;
+              break;
+            }
+          }
+
+          if (found) {
             permission = reacthandler.contributePermission;
           }
 
