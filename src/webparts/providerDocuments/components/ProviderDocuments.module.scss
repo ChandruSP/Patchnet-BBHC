@@ -73,7 +73,8 @@
     }
   }
 }
-.input_field {
+.input_field,
+.notesinput_field {
   margin-bottom: 10px;
   font-family: Poppins, sans-serif;
   label {
@@ -81,6 +82,14 @@
     font-weight: 400;
     font-size: 13px;
     padding-bottom: 0;
+  }
+}
+.notesinput_field {
+  textarea {
+    width: 300px;
+  }
+  label {
+    padding-bottom: 5px;
   }
 }
 .primary_button {
@@ -107,7 +116,7 @@
 
 .d_flex {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
 }
 .files_upload {
   display: flex;

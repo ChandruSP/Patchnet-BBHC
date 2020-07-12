@@ -97,7 +97,6 @@ const exampleChildClass = mergeStyles({
 });
 
 const textFieldStyles: Partial<ITextFieldStyles> = {
-
   root: { maxWidth: "100%", fontFamily: "Poppins, sans-serif" },
 };
 
@@ -147,7 +146,7 @@ export interface IDetailsListBasicExampleState {
 export default class Providers extends React.Component<
   IProvidersProp,
   IDetailsListBasicExampleState
-  > {
+> {
   private _selection: Selection;
   private _columns: IColumn[];
 
@@ -200,7 +199,6 @@ export default class Providers extends React.Component<
       .then(function (res) {
         that.contributePermission = res.Id;
       });
-
 
     sp.web.lists
       .getByTitle("UploadFolders")
@@ -306,7 +304,8 @@ export default class Providers extends React.Component<
     var that = this;
     sp.web.lists
       .getByTitle("ProviderDetails")
-      .items.orderBy("Id", false).select(
+      .items.orderBy("Id", false)
+      .select(
         "Title",
         "LegalName",
         "ProviderID",
@@ -365,8 +364,8 @@ export default class Providers extends React.Component<
     this.setState({
       items: text
         ? this.state.allItems.filter(
-          (i) => i.Title.toLowerCase().indexOf(text) > -1
-        )
+            (i) => i.Title.toLowerCase().indexOf(text) > -1
+          )
         : this.state.allItems,
     });
   };
@@ -569,10 +568,13 @@ export default class Providers extends React.Component<
               var permission = reacthandler.readPermission;
               var sdata = clonedUrl.split("/");
 
-              var folderFilter = reacthandler.allUploadFolders.filter(c => c.TemplateType == reacthandler.state.formData.TemplateType);
+              var folderFilter = reacthandler.allUploadFolders.filter(
+                (c) =>
+                  c.TemplateType == reacthandler.state.formData.TemplateType
+              );
               var found = false;
               for (let l = 0; l < folderFilter.length; l++) {
-                const fold = folderFilter[l].Title.split(' - ');
+                const fold = folderFilter[l].Title.split(" - ");
                 if (fold[fold.length - 1] == sdata[sdata.length - 1]) {
                   found = true;
                   break;
@@ -673,19 +675,19 @@ export default class Providers extends React.Component<
 
       var newUsersAdded = null;
       if (this.newAddedUsers.length > 0) {
-        newUsersAdded = '\nNew user(s) added : ';
+        newUsersAdded = "\nNew user(s) added : ";
         for (let u = 0; u < this.newAddedUsers.length; u++) {
           const user = this.newAddedUsers[u];
-          newUsersAdded = newUsersAdded + user + "; "
+          newUsersAdded = newUsersAdded + user + "; ";
         }
       }
 
       var deletededUser = null;
       if (this.deletedUsers.length > 0) {
-        deletededUser = '\nUser(s) deleted : ';
+        deletededUser = "\nUser(s) deleted : ";
         for (let d = 0; d < this.deletedUsers.length; d++) {
           const user = this.deletedUsers[d];
-          deletededUser = deletededUser + user + "; "
+          deletededUser = deletededUser + user + "; ";
         }
       }
 
@@ -696,14 +698,17 @@ export default class Providers extends React.Component<
         formData.Logs = formData.Logs + deletededUser;
       }
 
-
       sp.web.lists
         .getByTitle("ProviderDetails")
         .items.getById(formData.Id)
         .update(formData)
         .then((res) => {
           alertify.success("Provider updated");
-          that.setrootfolderpermission("TemplateLibrary/" + formData.TemplateType, formData.Title, year)
+          that.setrootfolderpermission(
+            "TemplateLibrary/" + formData.TemplateType,
+            formData.Title,
+            year
+          );
           that.loadTableData();
           that.setState({ hideDialog: true });
         });
@@ -713,7 +718,6 @@ export default class Providers extends React.Component<
       if (currentMonth < 7) {
         stryear = (currentYear - 1).toString().substr(2, 2);
       }
-
 
       formData.ContractId = formData.ContractId + "-" + stryear;
       formData.Logs =
@@ -748,7 +752,11 @@ export default class Providers extends React.Component<
         formData
       );
       setTimeout(() => {
-        reacthandler.setrootfolderpermission("TemplateLibrary/" + formData.TemplateType, providerName, year);
+        reacthandler.setrootfolderpermission(
+          "TemplateLibrary/" + formData.TemplateType,
+          providerName,
+          year
+        );
         reacthandler.setpermissionsforfolders(
           "TemplateLibrary/" + formData.TemplateType,
           providerName,
@@ -761,7 +769,6 @@ export default class Providers extends React.Component<
     reacthandler.setState({ hideDialog: true });
   };
 
-
   setrootfolderpermission = (templateLibrary, providerName, year) => {
     var reacthandler = this;
     var currentMonth = new Date().getMonth() + 1;
@@ -769,7 +776,8 @@ export default class Providers extends React.Component<
     if (currentMonth < 7) {
       stryear = year - 1 + "-" + year;
     }
-    var folderPath = reacthandler.rootFolder + "/" + "FY " + stryear + "/" + providerName;
+    var folderPath =
+      reacthandler.rootFolder + "/" + "FY " + stryear + "/" + providerName;
 
     const spHttpClient: SPHttpClient = this.props.currentContext.spHttpClient;
     var queryUrl =
@@ -813,7 +821,7 @@ export default class Providers extends React.Component<
                     ")";
                   spHttpClient
                     .post(bbhcpostUrl, SPHttpClient.configurations.v1, spOpts)
-                    .then((response: SPHttpClientResponse) => { });
+                    .then((response: SPHttpClientResponse) => {});
                 }
               }
             });
@@ -832,11 +840,11 @@ export default class Providers extends React.Component<
               ")";
             spHttpClient
               .post(postUrl, SPHttpClient.configurations.v1, spOpts)
-              .then((response: SPHttpClientResponse) => { });
+              .then((response: SPHttpClientResponse) => {});
           }
         }
       });
-  }
+  };
 
   getFolder = (folderPath, providerName, year, formData) => {
     var reacthandler = this;
@@ -932,10 +940,12 @@ export default class Providers extends React.Component<
           var permission = reacthandler.readPermission;
           var sdata = serverRelativeUrl.split("/");
 
-          var folderFilter = reacthandler.allUploadFolders.filter(c => c.TemplateType == formData.TemplateType);
+          var folderFilter = reacthandler.allUploadFolders.filter(
+            (c) => c.TemplateType == formData.TemplateType
+          );
           var found = false;
           for (let l = 0; l < folderFilter.length; l++) {
-            const fold = folderFilter[l].Title.split(' - ');
+            const fold = folderFilter[l].Title.split(" - ");
             if (fold[fold.length - 1] == sdata[sdata.length - 1]) {
               found = true;
               break;
@@ -974,7 +984,7 @@ export default class Providers extends React.Component<
                     ")";
                   spHttpClient
                     .post(bbhcpostUrl, SPHttpClient.configurations.v1, spOpts)
-                    .then((response: SPHttpClientResponse) => { });
+                    .then((response: SPHttpClientResponse) => {});
                 }
               }
             });
@@ -993,7 +1003,7 @@ export default class Providers extends React.Component<
               ")";
             spHttpClient
               .post(postUrl, SPHttpClient.configurations.v1, spOpts)
-              .then((response: SPHttpClientResponse) => { });
+              .then((response: SPHttpClientResponse) => {});
           }
 
           reacthandler.setpermissionsforfolders(
@@ -1211,11 +1221,10 @@ export default class Providers extends React.Component<
               backgroundColor: "rgb(243, 242, 241)",
               fontFamily: "Poppins, sans-serif",
               marginTop: 3,
-              fontSize: "15px",
-              fontWeight: 500,
             },
-            ".cellName-230": {
+            ".ms-DetailsHeader-cellName": {
               fontWeight: 500,
+              fontSize: "14px",
             },
           },
         },
@@ -1482,8 +1491,8 @@ export default class Providers extends React.Component<
                 ></TextField>
               </div>
             ) : (
-                ""
-              )}
+              ""
+            )}
 
             {this.state.AllUsers.map((user, index) => {
               if (this.state.AllUsers.length == 1) {
@@ -1570,9 +1579,14 @@ export default class Providers extends React.Component<
         <Dialog
           hidden={this.state.hideDeleteDialog}
           dialogContentProps={dialogContentProps}
+          styles={dialogStyles}
         >
           <DialogFooter>
-            <PrimaryButton onClick={this.deleteItems.bind(this)} text="Yes" />
+            <PrimaryButton
+              onClick={this.deleteItems.bind(this)}
+              text="Yes"
+              className={styles.button_primary}
+            />
             <DefaultButton onClick={this.hideDelete.bind(this)} text="No" />
           </DialogFooter>
         </Dialog>

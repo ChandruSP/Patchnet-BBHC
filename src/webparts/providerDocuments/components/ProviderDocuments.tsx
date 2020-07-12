@@ -76,14 +76,14 @@ const dropDown2Styles: Partial<IDropdownStyles> = {
         fontFamily: "Poppins, sans-serif",
       },
     },
-    marginLeft: "150px"
+    marginLeft: "0",
   },
 };
 
 export default class ProviderDocuments extends React.Component<
   IProviderDocumentsProps,
   IBbhcState
-  > {
+> {
   currentYear = new Date().getFullYear();
   rootFolder = "Providers Library";
   templateLibrary = "TemplateLibrary";
@@ -110,7 +110,7 @@ export default class ProviderDocuments extends React.Component<
       notes: "",
       previousyeardata: [],
       allProviders: [],
-      allData: []
+      allData: [],
     };
     this.getProviderMetaData();
   }
@@ -122,8 +122,8 @@ export default class ProviderDocuments extends React.Component<
       .items.select("Title", "ContractId", "TemplateType")
       .filter(
         "substringof('" +
-        this.props.currentContext.pageContext.user.email.toLowerCase() +
-        "',Users)"
+          this.props.currentContext.pageContext.user.email.toLowerCase() +
+          "',Users)"
       )
       .get()
       .then((res) => {
@@ -177,7 +177,7 @@ export default class ProviderDocuments extends React.Component<
           that.setState({
             previousyeardata: previousyeardata,
             allProviders: allProviders,
-            allData: allData
+            allData: allData,
           });
         } else {
           that.setState({ folders: [] });
@@ -295,7 +295,9 @@ export default class ProviderDocuments extends React.Component<
       }
       var selectedPath = this.state.selectedPath;
       if (selectedPath) {
-        if (selectedPath.toLocaleLowerCase().indexOf(this.generalSubmission) >= 0) {
+        if (
+          selectedPath.toLocaleLowerCase().indexOf(this.generalSubmission) >= 0
+        ) {
           if (!this.state.notes) {
             alertify.error("Notes is required");
             return;
@@ -315,7 +317,11 @@ export default class ProviderDocuments extends React.Component<
           .getFolderByServerRelativeUrl(folderPath)
           .files.add(that.state.file.name, that.state.file, true)
           .then(function (result) {
-            if (selectedPath.toLocaleLowerCase().indexOf(that.generalSubmission) >= 0) {
+            if (
+              selectedPath
+                .toLocaleLowerCase()
+                .indexOf(that.generalSubmission) >= 0
+            ) {
               result.file.listItemAllFields.get().then(function (fileData) {
                 sp.web.lists
                   .getByTitle(that.rootFolder)
@@ -330,7 +336,8 @@ export default class ProviderDocuments extends React.Component<
                           that.props.currentContext.pageContext.web
                             .absoluteUrl +
                           "/" +
-                          folderPath + "/" +
+                          folderPath +
+                          "/" +
                           that.state.file.name;
                         var to = res[0].To.split(";");
                         var cc = [];
@@ -361,7 +368,6 @@ export default class ProviderDocuments extends React.Component<
                         alertify.success("File uploaded successfully");
                         location.reload();
                       });
-
                   });
               });
             } else {
@@ -450,7 +456,7 @@ export default class ProviderDocuments extends React.Component<
       item: IDropdownOption
     ): void => {
       var providerName = item.key.toString();
-      var data = this.state.allData.filter(c => c.Title == providerName);
+      var data = this.state.allData.filter((c) => c.Title == providerName);
       if (data.length > 0) {
         this.loadUploadFolders(data[0].TemplateType);
       }
@@ -461,83 +467,101 @@ export default class ProviderDocuments extends React.Component<
       <div>
         <h2 style={{ fontFamily: "Poppins, sans-serif" }}>Add File</h2>
         <div className={styles.d_flex}>
-          {
-            <Dropdown
-              placeholder="Select an provider"
-              label="Providers"
-              options={this.state.allProviders}
-              onChange={providerChange}
-              style={{ width: "300px" }}
-              styles={dropDownStyles}
+          <div>
+            {
+              <Dropdown
+                placeholder="Select an provider"
+                label="Providers"
+                options={this.state.allProviders}
+                onChange={providerChange}
+                style={{ width: "300px" }}
+                styles={dropDownStyles}
+                className={styles.input_field}
+              />
+            }
+            {
+              <Dropdown
+                placeholder="Select an option"
+                label="Submission Types"
+                options={this.state.folders}
+                onChange={dropdownChange}
+                style={{ width: "300px" }}
+                styles={dropDown2Styles}
+                className={styles.input_field}
+              />
+            }
+            <input
+              type="file"
+              name="UploadedFile"
+              id={fileId}
+              onChange={(e) => this.fileUpload.call(this, e)}
+              style={{ display: "none" }}
               className={styles.input_field}
             />
-          }
+            <Label htmlFor={fileId} style={{ width: "300px" }}>
+              <Label
+                style={{
+                  padding: "5px",
+                  fontFamily: "Poppins, sans-serif",
+                  width: "150px",
+                }}
+              >
+                Attach File
+              </Label>
+              <div className={styles.files_upload}>
+                <Image
+                  styles={{ image: { padding: "5px" } }}
+                  src={require("./Attach.png")}
+                ></Image>
+                <Label
+                  style={{
+                    padding: "5px",
+                    fontFamily: "Poppins, sans-serif",
+                  }}
+                >
+                  {this.state.fileName}
+                </Label>
+              </div>
+            </Label>
 
-          {
-            <Dropdown
-              placeholder="Select an option"
-              label="Submission Types"
-              options={this.state.folders}
-              onChange={dropdownChange}
-              style={{ width: "400px" }}
-              styles={dropDown2Styles}
-              className={styles.input_field}
+            <div>
+              {this.state.previousyeardata.map((provider) => {
+                return (
+                  <div>
+                    <Link href={provider.URL} target="_blank">
+                      {provider.Title}
+                    </Link>
+                    <br></br>
+                  </div>
+                );
+              })}
+            </div>
+
+            <PrimaryButton
+              text="Upload"
+              onClick={this.uploadFile.bind(this)}
+              className={styles.primary_button}
             />
-          }
-
-          {this.state.selectedPath
-            .toLocaleLowerCase()
-            .indexOf(this.generalSubmission) >= 0 ? (
+          </div>
+          <div style={{ marginLeft: "40px" }}>
+            {this.state.selectedPath
+              .toLocaleLowerCase()
+              .indexOf(this.generalSubmission) >= 0 ? (
               <TextField
+                required
                 label="Notes"
-                width="100px"
+                multiline
+                rows={3}
                 onChange={(e) => this.inputChangeHandler.call(this, e)}
                 value={this.state.notes}
                 name="notes"
-                className={styles.input_field}
+                className={styles.notesinput_field}
               ></TextField>
             ) : (
               ""
             )}
-        </div>
-
-        <input
-          type="file"
-          name="UploadedFile"
-          id={fileId}
-          onChange={(e) => this.fileUpload.call(this, e)}
-          style={{ display: "none" }}
-          className={styles.input_field}
-        />
-        <Label htmlFor={fileId}>
-          <Label style={{ padding: "5px", fontFamily: "Poppins, sans-serif", width: "150px" }}>Attach File</Label>
-          <div className={styles.files_upload}>
-            <Image
-              styles={{ image: { padding: "5px" } }}
-              src={require("./Attach.png")}
-            ></Image>
-            <Label>{this.state.fileName}</Label>
           </div>
-        </Label>
-
-        <div>
-          {this.state.previousyeardata.map((provider) => {
-            return (
-              <div>
-                <Link href={provider.URL} target="_blank">
-                  {provider.Title}
-                </Link>
-                <br></br>
-              </div>
-            );
-          })}
         </div>
-
-        <PrimaryButton
-          text="Upload"
-          onClick={this.uploadFile.bind(this)}
-          className={styles.primary_button}
-        />
       </div>
     );
   }
