@@ -123,7 +123,7 @@ export default class ProviderDocuments extends React.Component<
       .filter(
         "substringof('" +
           this.props.currentContext.pageContext.user.email.toLowerCase() +
-          "',Users)"
+          "',Users) and IsDeleted eq 0"
       )
       .get()
       .then((res) => {

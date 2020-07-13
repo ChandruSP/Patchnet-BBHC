@@ -31,7 +31,8 @@
     "react-alertify-js": "0.0.1",
     "react-dom": "16.8.5",
     "react-excel-renderer": "^1.1.0",
-    "react-upload-file": "^2.0.0-beta.6"
+    "react-upload-file": "^2.0.0-beta.6",
+    "suneditor-react": "^2.12.5"
   },
   "resolutions": {
     "@types/react": "16.8.8"

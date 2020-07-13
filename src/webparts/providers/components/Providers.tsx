@@ -441,6 +441,10 @@ export default class Providers extends React.Component<
       return;
     }
     var that = this;
+    that.userDetails = [];
+    this.newAddedUsers = [];
+    this.deletedUsers = [];
+
     for (let index = 0; index < this.state.AllUsers.length; index++) {
       const user = this.state.AllUsers[index];
       if (/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/.test(user)) {
@@ -460,8 +464,6 @@ export default class Providers extends React.Component<
       }
     }
 
-    this.newAddedUsers = [];
-    this.deletedUsers = [];
 
     if (this.state.editUsers) {
       var existingUsers = this.state.editUsers.split(";");
@@ -763,7 +765,7 @@ export default class Providers extends React.Component<
           year,
           formData
         );
-      }, 4000);
+      }, 2000);
     });
     alertify.success("Provider is created");
     reacthandler.setState({ hideDialog: true });
