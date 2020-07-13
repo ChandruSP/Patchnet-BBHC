@@ -146,7 +146,7 @@ export interface IDetailsListBasicExampleState {
 export default class Providers extends React.Component<
   IProvidersProp,
   IDetailsListBasicExampleState
-> {
+  > {
   private _selection: Selection;
   private _columns: IColumn[];
 
@@ -364,8 +364,8 @@ export default class Providers extends React.Component<
     this.setState({
       items: text
         ? this.state.allItems.filter(
-            (i) => i.Title.toLowerCase().indexOf(text) > -1
-          )
+          (i) => i.Title.toLowerCase().indexOf(text) > -1
+        )
         : this.state.allItems,
     });
   };
@@ -806,22 +806,24 @@ export default class Providers extends React.Component<
                 resdata["ListItemAllFields"].RoleAssignments;
               for (let i = 0; i < roleAssignments.length; i++) {
                 const role = roleAssignments[i];
-                for (let j = 0; j < role.RoleDefinitionBindings.length; j++) {
-                  const definition = role.RoleDefinitionBindings[j];
-                  var bbhcpostUrl =
-                    this.props.currentContext.pageContext.web.absoluteUrl +
-                    "/_api/web/GetFolderByServerRelativeUrl(" +
-                    "'" +
-                    folderPath +
-                    "'" +
-                    ")/ListItemAllFields/roleassignments/addroleassignment(principalid=" +
-                    role.Member.Id +
-                    ",roledefid=" +
-                    definition.Id +
-                    ")";
-                  spHttpClient
-                    .post(bbhcpostUrl, SPHttpClient.configurations.v1, spOpts)
-                    .then((response: SPHttpClientResponse) => {});
+                if (role.Member.LoginName != 'BBHC Provider SharePoint Viewers') {
+                  for (let j = 0; j < role.RoleDefinitionBindings.length; j++) {
+                    const definition = role.RoleDefinitionBindings[j];
+                    var bbhcpostUrl =
+                      this.props.currentContext.pageContext.web.absoluteUrl +
+                      "/_api/web/GetFolderByServerRelativeUrl(" +
+                      "'" +
+                      folderPath +
+                      "'" +
+                      ")/ListItemAllFields/roleassignments/addroleassignment(principalid=" +
+                      role.Member.Id +
+                      ",roledefid=" +
+                      definition.Id +
+                      ")";
+                    spHttpClient
+                      .post(bbhcpostUrl, SPHttpClient.configurations.v1, spOpts)
+                      .then((response: SPHttpClientResponse) => { });
+                  }
                 }
               }
             });
@@ -840,7 +842,7 @@ export default class Providers extends React.Component<
               ")";
             spHttpClient
               .post(postUrl, SPHttpClient.configurations.v1, spOpts)
-              .then((response: SPHttpClientResponse) => {});
+              .then((response: SPHttpClientResponse) => { });
           }
         }
       });
@@ -969,22 +971,24 @@ export default class Providers extends React.Component<
                 resdata["ListItemAllFields"].RoleAssignments;
               for (let i = 0; i < roleAssignments.length; i++) {
                 const role = roleAssignments[i];
-                for (let j = 0; j < role.RoleDefinitionBindings.length; j++) {
-                  const definition = role.RoleDefinitionBindings[j];
-                  var bbhcpostUrl =
-                    this.props.currentContext.pageContext.web.absoluteUrl +
-                    "/_api/web/GetFolderByServerRelativeUrl(" +
-                    "'" +
-                    url +
-                    "'" +
-                    ")/ListItemAllFields/roleassignments/addroleassignment(principalid=" +
-                    role.Member.Id +
-                    ",roledefid=" +
-                    definition.Id +
-                    ")";
-                  spHttpClient
-                    .post(bbhcpostUrl, SPHttpClient.configurations.v1, spOpts)
-                    .then((response: SPHttpClientResponse) => {});
+                if (role.Member.LoginName != 'BBHC Provider SharePoint Viewers') {
+                  for (let j = 0; j < role.RoleDefinitionBindings.length; j++) {
+                    const definition = role.RoleDefinitionBindings[j];
+                    var bbhcpostUrl =
+                      this.props.currentContext.pageContext.web.absoluteUrl +
+                      "/_api/web/GetFolderByServerRelativeUrl(" +
+                      "'" +
+                      url +
+                      "'" +
+                      ")/ListItemAllFields/roleassignments/addroleassignment(principalid=" +
+                      role.Member.Id +
+                      ",roledefid=" +
+                      definition.Id +
+                      ")";
+                    spHttpClient
+                      .post(bbhcpostUrl, SPHttpClient.configurations.v1, spOpts)
+                      .then((response: SPHttpClientResponse) => { });
+                  }
                 }
               }
             });
@@ -1003,7 +1007,7 @@ export default class Providers extends React.Component<
               ")";
             spHttpClient
               .post(postUrl, SPHttpClient.configurations.v1, spOpts)
-              .then((response: SPHttpClientResponse) => {});
+              .then((response: SPHttpClientResponse) => { });
           }
 
           reacthandler.setpermissionsforfolders(
@@ -1491,8 +1495,8 @@ export default class Providers extends React.Component<
                 ></TextField>
               </div>
             ) : (
-              ""
-            )}
+                ""
+              )}
 
             {this.state.AllUsers.map((user, index) => {
               if (this.state.AllUsers.length == 1) {
