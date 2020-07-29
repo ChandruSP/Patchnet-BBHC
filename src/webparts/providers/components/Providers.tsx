@@ -489,11 +489,19 @@ export default class Providers extends React.Component<
         }
       }
 
+
+      var providerData = {
+        Title: formData.Title,
+        ContractId: formData.ContractId,
+        Users: ''
+      };
+
       for (let j = 0; j < existingUsers.length; j++) {
         if (existingUsers[j]) {
           var removeuser = newUsers.filter((c) => c == existingUsers[j]);
           if (removeuser.length == 0) {
             this.deletedUsers.push(existingUsers[j]);
+            providerData.Users = providerData.Users + existingUsers[j] +';';
             that.setpermissionfornewuser(
               "TemplateLibrary/" + that.state.formData.TemplateType,
               existingUsers[j],
@@ -501,6 +509,9 @@ export default class Providers extends React.Component<
             );
           }
         }
+      }
+      if(providerData.Users){
+        this.removerMainFolderUserPermission(providerData);
       }
     }
 
@@ -1153,60 +1164,63 @@ export default class Providers extends React.Component<
   }
 
   removeProviderFolderPermission(items) {
-    var reacthandler = this;
     for (let index = 0; index < items.length; index++) {
       const provider = items[index];
-      var users = provider.Users.split(';');
-      for (let j = 0; j < users.length; j++) {
-        const user = users[j];
-        if (user) {
-          sp.web.siteUsers
-            .getByEmail(user)
-            .get()
-            .then(function (userdata) {
-
-              var contract = provider.ContractId.substr(
-                provider.ContractId.length - 2,
-                2
-              );
-              var nextyear = parseInt(contract) + 1;
-              var currentyearprefix = currentYear.toString().substr(0, 2);
-              var yearfolder =
-                "FY " +
-                (currentyearprefix + contract) +
-                "-" +
-                (currentyearprefix + nextyear);
-
-              var providerFolder = reacthandler.rootFolder + "/" + yearfolder + '/' + provider.Title;
-
-              var postUrl =
-                reacthandler.props.currentContext.pageContext.web.absoluteUrl +
-                "/_api/web/GetFolderByServerRelativeUrl(" +
-                "'" +
-                providerFolder +
-                "'" +
-                ")/ListItemAllFields/roleassignments/removeroleassignment(principalid=" +
-                userdata.Id +
-                ",roledefid=" +
-                reacthandler.readPermission +
-                ")";
-
-              const spHttpClient: SPHttpClient = reacthandler.props.currentContext.spHttpClient;
-              const spOpts: ISPHttpClientOptions = {};
-
-              spHttpClient
-                .post(postUrl, SPHttpClient.configurations.v1, spOpts)
-                .then((response: SPHttpClientResponse) => {
-                  if (response.ok) {
-                  }
-                });
-
-            });
-        }
-      }
+      this.removerMainFolderUserPermission(provider);
     }
   }
 
+  removerMainFolderUserPermission(provider) {
+    var reacthandler = this;
+    var users = provider.Users.split(';');
+    for (let j = 0; j < users.length; j++) {
+      const user = users[j];
+      if (user) {
+        sp.web.siteUsers
+          .getByEmail(user)
+          .get()
+          .then(function (userdata) {
+
+            var contract = provider.ContractId.substr(
+              provider.ContractId.length - 2,
+              2
+            );
+            var nextyear = parseInt(contract) + 1;
+            var currentyearprefix = currentYear.toString().substr(0, 2);
+            var yearfolder =
+              "FY " +
+              (currentyearprefix + contract) +
+              "-" +
+              (currentyearprefix + nextyear);
+
+            var providerFolder = reacthandler.rootFolder + "/" + yearfolder + '/' + provider.Title;
+
+            var postUrl =
+              reacthandler.props.currentContext.pageContext.web.absoluteUrl +
+              "/_api/web/GetFolderByServerRelativeUrl(" +
+              "'" +
+              providerFolder +
+              "'" +
+              ")/ListItemAllFields/roleassignments/removeroleassignment(principalid=" +
+              userdata.Id +
+              ",roledefid=" +
+              reacthandler.readPermission +
+              ")";
+
+            const spHttpClient: SPHttpClient = reacthandler.props.currentContext.spHttpClient;
+            const spOpts: ISPHttpClientOptions = {};
+
+            spHttpClient
+              .post(postUrl, SPHttpClient.configurations.v1, spOpts)
+              .then((response: SPHttpClientResponse) => {
+                if (response.ok) {
+                }
+              });
+
+          });
+      }
+    }
+  }
 
   _onColumnClick = (
     ev: React.MouseEvent<HTMLElement>,
