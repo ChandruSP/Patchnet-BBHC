@@ -25,6 +25,14 @@
           "manifest": "./src/webparts/providers/ProvidersWebPart.manifest.json"
         }
       ]
+    },
+    "visitors-group-web-part": {
+      "components": [
+        {
+          "entrypoint": "./lib/webparts/visitorsGroup/VisitorsGroupWebPart.js",
+          "manifest": "./src/webparts/visitorsGroup/VisitorsGroupWebPart.manifest.json"
+        }
+      ]
     }
   },
   "externals": {},
@@ -32,6 +40,7 @@
     "BbhcWebPartStrings": "lib/webparts/bbhc/loc/{locale}.js",
     "ProviderDocumentsWebPartStrings": "lib/webparts/providerDocuments/loc/{locale}.js",
     "ControlStrings": "node_modules/@pnp/spfx-controls-react/lib/loc/{locale}.js",
-    "ProvidersWebPartStrings": "lib/webparts/providers/loc/{locale}.js"
+    "ProvidersWebPartStrings": "lib/webparts/providers/loc/{locale}.js",
+    "VisitorsGroupWebPartStrings": "lib/webparts/visitorsGroup/loc/{locale}.js"
   }
 }

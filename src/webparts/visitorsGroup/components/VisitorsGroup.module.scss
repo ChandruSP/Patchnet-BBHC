@@ -1,0 +1,185 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500&display=swap");
+@import "~office-ui-fabric-react/dist/sass/References.scss";
+body {
+  font-family: "Poppins", sans-serif;
+  font-weight: 400;
+}
+.visitorsGroup {
+  .container {
+    max-width: 700px;
+    margin: 0px auto;
+    box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.2), 0 25px 50px 0 rgba(0, 0, 0, 0.1);
+  }
+
+  .row {
+    @include ms-Grid-row;
+    @include ms-fontColor-white;
+    background-color: $ms-color-themeDark;
+    padding: 20px;
+  }
+
+  .column {
+    @include ms-Grid-col;
+    @include ms-lg10;
+    @include ms-xl8;
+    @include ms-xlPush2;
+    @include ms-lgPush1;
+  }
+
+  .title {
+    @include ms-font-xl;
+    @include ms-fontColor-white;
+  }
+
+  .subTitle {
+    @include ms-font-l;
+    @include ms-fontColor-white;
+  }
+
+  .description {
+    @include ms-font-l;
+    @include ms-fontColor-white;
+  }
+
+  .button {
+    // Our button
+    text-decoration: none;
+    height: 32px;
+
+    // Primary Button
+    min-width: 80px;
+    background-color: $ms-color-themePrimary;
+    border-color: $ms-color-themePrimary;
+    color: $ms-color-white;
+
+    // Basic Button
+    outline: transparent;
+    position: relative;
+    font-family: Poppins, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    font-size: $ms-font-size-m;
+    font-weight: $ms-font-weight-regular;
+    border-width: 0;
+    text-align: center;
+    cursor: pointer;
+    display: inline-block;
+    padding: 0 16px;
+
+    .label {
+      font-weight: $ms-font-weight-semibold;
+      font-size: $ms-font-size-m;
+      height: 32px;
+      line-height: 32px;
+      margin: 0 4px;
+      vertical-align: top;
+      display: inline-block;
+    }
+  }
+}
+
+.margintop {
+  margin-top: 20px;
+  button {
+    &:first-of-type {
+      margin-right: 10px;
+    }
+  }
+}
+.text-margin-top {
+  margin-top: 15px;
+}
+//override css
+.margin_bottom {
+  margin-bottom: 10px;
+}
+.margin_bottom_5 {
+  margin-bottom: 5px;
+}
+%circle-button {
+  -webkit-border-radius: 50%;
+  -moz-border-radius: 50%;
+  border-radius: 50%;
+}
+.input_field {
+  margin-bottom: 10px;
+  font-family: Poppins, sans-serif;
+  label {
+    font-family: Poppins, sans-serif;
+    font-weight: 400;
+    font-size: 13px;
+    padding-bottom: 0;
+  }
+}
+.button_primary {
+  background-color: #3f51b5;
+  color: #fff;
+  font-family: Poppins, sans-serif !important;
+
+  &:hover {
+    background-color: #485bc4;
+    color: #fff;
+    box-shadow: 0 3px 5px -1px rgba(0, 0, 0, 0.2),
+      0 6px 10px 0 rgba(0, 0, 0, 0.14), 0 1px 18px 0 rgba(0, 0, 0, 0.12);
+  }
+}
+.button_default {
+  font-family: Poppins, sans-serif !important;
+}
+.primary_button {
+  background-color: #3f51b5;
+  color: #fff;
+  @extend %circle-button;
+  &:hover {
+    background-color: #485bc4;
+    color: #fff;
+    box-shadow: 0 3px 5px -1px rgba(0, 0, 0, 0.2),
+      0 6px 10px 0 rgba(0, 0, 0, 0.14), 0 1px 18px 0 rgba(0, 0, 0, 0.12);
+  }
+}
+.secondary_button {
+  background-color: #f44336;
+  color: #fff;
+  @extend %circle-button;
+  &:hover {
+    background-color: #fd5246;
+    color: #fff;
+    box-shadow: 0 3px 5px -1px rgba(0, 0, 0, 0.2),
+      0 6px 10px 0 rgba(0, 0, 0, 0.14), 0 1px 18px 0 rgba(0, 0, 0, 0.12);
+  }
+}
+.heading_01 {
+  font-size: 18px;
+  font-weight: 500;
+  font-family: Poppins, sans-serif;
+}
+.checkbox_label {
+  label {
+    font-family: Poppins, sans-serif;
+    font-weight: 400;
+    font-size: 13px;
+    padding-bottom: 0;
+  }
+}
+
+.searchTextbox {
+  width: 500px;
+  float: right;
+}
+
+.tableContainer {
+  float: left;
+  width: 100%;
+}
+
+.announcement {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  font-family: Poppins, sans-serif;
+}
+.cellName-230 {
+  font-size: 14px;
+  font-weight: 600;
+  color: red;
+}
