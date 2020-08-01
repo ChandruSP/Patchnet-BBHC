@@ -3,4 +3,5 @@ export interface IVisitorsGroupProps {
   Title: string;
   siteUrl: String;
   currentContext: any;
+  graphClient: any;
 }

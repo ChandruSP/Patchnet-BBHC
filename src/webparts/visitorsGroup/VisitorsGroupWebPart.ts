@@ -7,6 +7,8 @@ import {
 } from '@microsoft/sp-property-pane';
 import { BaseClientSideWebPart } from '@microsoft/sp-webpart-base';
 
+import { MSGraphClient, HttpClient } from '@microsoft/sp-http';
+
 import * as strings from 'VisitorsGroupWebPartStrings';
 import VisitorsGroup from './components/VisitorsGroup';
 import { IVisitorsGroupProps } from './components/IVisitorsGroupProps';
@@ -15,22 +17,28 @@ export interface IVisitorsGroupWebPartProps {
   description: string;
 }
 
-export default class VisitorsGroupWebPart extends BaseClientSideWebPart <IVisitorsGroupWebPartProps> {
+export default class VisitorsGroupWebPart extends BaseClientSideWebPart<IVisitorsGroupWebPartProps> {
 
   public render(): void {
-  
-    var currentContext = this.context;
-  
-    const element: React.ReactElement<IVisitorsGroupProps> = React.createElement(
-      VisitorsGroup,
-      {
-        description: this.properties.description,
-        currentContext: currentContext,
-        siteUrl: this.context.pageContext.web.absoluteUrl
-      }
-    );
 
-    ReactDom.render(element, this.domElement);
+    var currentContext = this.context;
+
+    this.context.msGraphClientFactory.getClient()
+      .then((_graphClient: MSGraphClient): void => {
+
+        const element: React.ReactElement<IVisitorsGroupProps> = React.createElement(
+          VisitorsGroup,
+          {
+            description: this.properties.description,
+            currentContext: currentContext,
+            siteUrl: this.context.pageContext.web.absoluteUrl,
+            graphClient: _graphClient,
+          }
+        );
+
+        ReactDom.render(element, this.domElement);
+
+      });
   }
 
   protected onDispose(): void {

@@ -88,12 +88,18 @@ export interface IVisitorsGroupState {
   allItems: any[];
   hideDeleteDialog: boolean;
   hideAddDialog: boolean;
+  hideSyncDialog: boolean;
   email: string;
+  syncUserDetails: string;
+  syncUsers: any[];
 }
 
 export default class VisitorsGroup extends React.Component<IVisitorsGroupProps, IVisitorsGroupState> {
 
-  visitorsGroupName = 'Provider_Dev Visitors';
+  // visitorsGroupName = 'Provider_Dev Visitors';
+  visitorsGroupName = 'Demo Visitors';
+  visitorsList = 'VisitorsDetails';
+  redirectURL = 'http://localhost:51130/BBHCVisitors/Index?id=';
 
   private _selection: Selection;
   private _columns: IColumn[];
@@ -109,8 +115,13 @@ export default class VisitorsGroup extends React.Component<IVisitorsGroupProps, 
       allItems: [],
       hideDeleteDialog: true,
       hideAddDialog: true,
-      email: ''
+      hideSyncDialog: true,
+      email: '',
+      syncUserDetails: '',
+      syncUsers: []
     };
+
+    this.syncUserDetails();
 
     this._selection = new Selection({
       onSelectionChanged: () =>
@@ -142,6 +153,19 @@ export default class VisitorsGroup extends React.Component<IVisitorsGroupProps, 
       }
     ];
     this.loadVisitors();
+  }
+
+  syncUserDetails = () => {
+    sp.web.lists
+      .getByTitle(this.visitorsList)
+      .items.filter("IsSync eq '0' and InvitationAccept eq '1'")
+      .get()
+      .then((res) => {
+        this.setState({ syncUserDetails: res.length + ' user(s) to sync', syncUsers: res });
+        if (this.state.syncUsers.length == 0) {
+          this.setState({ hideSyncDialog: true });
+        }
+      });
   }
 
   loadVisitors() {
@@ -221,6 +245,16 @@ export default class VisitorsGroup extends React.Component<IVisitorsGroupProps, 
   };
 
   _onAddRow() {
+
+    // this.props.graphClient
+    //   .api('/me')
+    //   .get()
+    //   .then((content: any) => {
+    //     debugger;
+    //   })
+    //   .catch(err => {
+    //   });
+
     this.setState({ hideAddDialog: false, email: '' });
   }
 
@@ -229,20 +263,33 @@ export default class VisitorsGroup extends React.Component<IVisitorsGroupProps, 
       alertify.error('Email is required');
       return;
     }
-    sp.web.siteUsers.getByEmail(this.state.email).get().then((result) => {
-      if (result) {
-        sp.web.siteGroups.getByName(this.visitorsGroupName).users
-          .add(result.LoginName).then((d) => {
-            alertify.success('User added successfully.');
-            this.loadVisitors();
-            this.setState({ hideAddDialog: true });
+    var formData = {
+      Title: this.state.email,
+      IsSync: false,
+      InvitationAccept: false
+    };
+
+    sp.web.lists
+      .getByTitle(this.visitorsList)
+      .items.add(formData)
+      .then((res) => {
+
+        var inviteData = {
+          "invitedUserEmailAddress": this.state.email,
+          "sendInvitationMessage": true,
+          "inviteRedirectUrl": this.redirectURL + res.data.Id
+        };
+
+        this.props.graphClient
+          .api('/invitations')
+          .post(inviteData)
+          .then((content: any) => {
+            alertify.success('Invitation sent successfully.');
+          })
+          .catch(err => {
+            alertify.error('Error while sending invitation.');
           });
-      } else {
-        alertify.error('User cannot be found.');
-      }
-    }).catch((err) => {
-      alertify.error('User cannot be found.');
-    });
+      });
   }
 
   hideDelete() {
@@ -295,6 +342,88 @@ export default class VisitorsGroup extends React.Component<IVisitorsGroupProps, 
     this.setState({
       email: e.target.value
     });
+  }
+
+
+  _syncUserPopup() {
+    if (this.state.syncUsers.length > 0) {
+      this.setState({ hideSyncDialog: false });
+    }
+  }
+
+  closesyncpopup = () => {
+    this.setState({ hideSyncDialog: true });
+  }
+
+  syncsingleuser = (index) => {
+    var user = this.state.syncUsers[index];
+    sp.web.siteUsers.getByEmail(user.Title).get().then((result) => {
+      if (result) {
+        sp.web.siteGroups.getByName(this.visitorsGroupName).users
+          .add(result.LoginName).then((d) => {
+            user.IsSync = true;
+            sp.web.lists
+              .getByTitle(this.visitorsList)
+              .items.getById(user.Id)
+              .update(user)
+              .then((res) => {
+                alertify.success('User synced successfully.');
+                this.loadVisitors();
+                this.syncUserDetails();
+              });
+          });
+      } else {
+        alertify.error('User cannot be found.');
+      }
+    }).catch((err) => {
+      alertify.error('User cannot be found.');
+    });
+  }
+
+  syncalluser = () => {
+    if (this.state.syncUsers.length > 0) {
+      this.synconebyone(0);
+    }
+  }
+
+  synconebyone = (index) => {
+    var user = this.state.syncUsers[index];
+    sp.web.siteUsers.getByEmail(user.Title).get().then((result) => {
+      if (result) {
+        sp.web.siteGroups.getByName(this.visitorsGroupName).users
+          .add(result.LoginName).then((d) => {
+            user.IsSync = true;
+            sp.web.lists
+              .getByTitle(this.visitorsList)
+              .items.getById(user.Id)
+              .update(user)
+              .then((res) => {
+                index = index + 1;
+                if (index < this.state.syncUsers.length) {
+                  this.synconebyone(index);
+                } else {
+                  alertify.success('User(s) synced successfully.');
+                  this.loadVisitors();
+                  this.syncUserDetails();
+                }
+              });
+          });
+      }
+    }).catch((err) => {
+      alertify.error('User cannot be found.');
+    });
+  }
+
+  updateToList = () => {
+    for (let index = 0; index < this.state.syncUsers.length; index++) {
+      const user = this.state.syncUsers[index];
+      sp.web.lists
+        .getByTitle("ProviderDetails")
+        .items.getById(user.Id)
+        .update(user)
+        .then((res) => {
+        });
+    }
   }
 
   public render(): React.ReactElement<IVisitorsGroupProps> {
@@ -383,6 +512,27 @@ export default class VisitorsGroup extends React.Component<IVisitorsGroupProps, 
       topOffsetFixed: false,
     };
 
+
+    const iconcolumnstyle: Partial<IStackProps> = {
+      tokens: {
+        childrenGap: 5,
+      },
+      styles: {
+        root: {
+          width: 30,
+        },
+      },
+    };
+
+    const stackTokens: IStackTokens = {
+      childrenGap: 4,
+    };
+    const stackStyles: Partial<IStackStyles> = {
+      root: {
+        // width: 600,
+      },
+    };
+
     const columnstyle: Partial<IStackProps> = {
       tokens: {
         childrenGap: 5,
@@ -411,6 +561,12 @@ export default class VisitorsGroup extends React.Component<IVisitorsGroupProps, 
               text: "Delete user(s)",
               iconProps: { iconName: "Delete" },
               onClick: this._onDeleteRow.bind(this),
+            },
+            {
+              key: 'sync',
+              text: this.state.syncUserDetails,
+              iconProps: { iconName: 'Upload' },
+              onClick: this._syncUserPopup.bind(this),
             },
           ]}
         />
@@ -492,6 +648,54 @@ export default class VisitorsGroup extends React.Component<IVisitorsGroupProps, 
               className={styles.button_primary}
             >Submit</PrimaryButton>
             <DefaultButton onClick={(e) => this.setState({ hideAddDialog: true })} text="Close" />
+          </DialogFooter>
+
+        </Dialog>
+
+
+
+
+        <Dialog
+          hidden={this.state.hideSyncDialog}
+          modalProps={modelProps}
+          minWidth="400px"
+          styles={dialogStyles}
+        >
+
+          {
+            this.state.syncUsers.map((user, index) => {
+              return (
+                <div>
+                  <Stack horizontal tokens={stackTokens} styles={stackStyles}>
+                    <Stack {...columnstyle}>
+                      <TextField
+                        value={user.Title}
+                        readOnly={true}
+                        className={styles.input_field}
+                      ></TextField>
+                    </Stack>
+
+                    <Stack {...iconcolumnstyle}>
+                      <IconButton
+                        iconProps={{ iconName: "Upload" }}
+                        title="Sync User"
+                        ariaLabel="Sync"
+                        onClick={this.syncsingleuser.bind(this, index)}
+                        className={styles.primary_button}
+                      />
+                    </Stack>
+                  </Stack>
+                </div>
+              )
+            })
+          }
+
+          <DialogFooter>
+            <PrimaryButton
+              onClick={this.syncalluser}
+              className={styles.button_primary}
+            >Sync All</PrimaryButton>
+            <DefaultButton onClick={this.closesyncpopup.bind(this)} text="Close" />
           </DialogFooter>
 
         </Dialog>
