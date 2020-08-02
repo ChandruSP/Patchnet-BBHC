@@ -97,9 +97,12 @@ export interface IVisitorsGroupState {
 export default class VisitorsGroup extends React.Component<IVisitorsGroupProps, IVisitorsGroupState> {
 
   // visitorsGroupName = 'Provider_Dev Visitors';
-  visitorsGroupName = 'Demo Visitors';
+  visitorsGroupName = 'ChandruDevSite Visitors';
   visitorsList = 'VisitorsDetails';
   redirectURL = 'http://localhost:51130/BBHCVisitors/Index?id=';
+  loginNamePrefix = 'i:0#.f|membership|';
+  loginNameSuffix = '#ext#@chandrudemo.onmicrosoft.com';
+
 
   private _selection: Selection;
   private _columns: IColumn[];
@@ -357,10 +360,11 @@ export default class VisitorsGroup extends React.Component<IVisitorsGroupProps, 
 
   syncsingleuser = (index) => {
     var user = this.state.syncUsers[index];
-    sp.web.siteUsers.getByEmail(user.Title).get().then((result) => {
+    var emailId = this.loginNamePrefix + user.Title.replace('@', '_') + this.loginNameSuffix;
+    sp.web.ensureUser(emailId).then((result) => {
       if (result) {
         sp.web.siteGroups.getByName(this.visitorsGroupName).users
-          .add(result.LoginName).then((d) => {
+          .add(result.data.LoginName).then((d) => {
             user.IsSync = true;
             sp.web.lists
               .getByTitle(this.visitorsList)
@@ -388,10 +392,11 @@ export default class VisitorsGroup extends React.Component<IVisitorsGroupProps, 
 
   synconebyone = (index) => {
     var user = this.state.syncUsers[index];
-    sp.web.siteUsers.getByEmail(user.Title).get().then((result) => {
+    var emailId = this.loginNamePrefix + user.Title.replace('@', '_') + this.loginNameSuffix;
+    sp.web.ensureUser(emailId).then((result) => {
       if (result) {
         sp.web.siteGroups.getByName(this.visitorsGroupName).users
-          .add(result.LoginName).then((d) => {
+          .add(result.data.LoginName).then((d) => {
             user.IsSync = true;
             sp.web.lists
               .getByTitle(this.visitorsList)
