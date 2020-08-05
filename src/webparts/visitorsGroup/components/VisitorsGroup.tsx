@@ -96,10 +96,12 @@ export interface IVisitorsGroupState {
 
 export default class VisitorsGroup extends React.Component<IVisitorsGroupProps, IVisitorsGroupState> {
 
-  // visitorsGroupName = 'Provider_Dev Visitors';
-  visitorsGroupName = 'ChandruDevSite Visitors';
+  visitorsGroupName = 'BBHC Provider SharePoint Viewers';
+
   visitorsList = 'VisitorsDetails';
+  // redirectURL = 'https://bbhcsyncvisitorstolist20200804061631.azurewebsites.net/BBHCVisitors/Index?id=';
   redirectURL = 'http://localhost:51130/BBHCVisitors/Index?id=';
+
   loginNamePrefix = 'i:0#.f|membership|';
   loginNameSuffix = '#ext#@chandrudemo.onmicrosoft.com';
 
@@ -109,6 +111,13 @@ export default class VisitorsGroup extends React.Component<IVisitorsGroupProps, 
 
   constructor(props) {
     super(props);
+
+    sp.setup({
+      sp: {
+        baseUrl: this.props.siteUrl,
+      },
+    });
+
 
     alertify.set("notifier", "position", "top-right");
 
@@ -280,7 +289,7 @@ export default class VisitorsGroup extends React.Component<IVisitorsGroupProps, 
         var inviteData = {
           "invitedUserEmailAddress": this.state.email,
           "sendInvitationMessage": true,
-          "inviteRedirectUrl": this.redirectURL + res.data.Id
+          "inviteRedirectUrl": this.redirectURL + btoa(res.data.Id + '-Id')
         };
 
         this.props.graphClient
@@ -288,6 +297,7 @@ export default class VisitorsGroup extends React.Component<IVisitorsGroupProps, 
           .post(inviteData)
           .then((content: any) => {
             alertify.success('Invitation sent successfully.');
+            this.setState({ email: '', hideAddDialog: true });
           })
           .catch(err => {
             alertify.error('Error while sending invitation.');
@@ -561,18 +571,19 @@ export default class VisitorsGroup extends React.Component<IVisitorsGroupProps, 
               iconProps: { iconName: "Add" },
               onClick: this._onAddRow.bind(this),
             },
-            {
-              key: "deleteRow",
-              text: "Delete user(s)",
-              iconProps: { iconName: "Delete" },
-              onClick: this._onDeleteRow.bind(this),
-            },
-            {
-              key: 'sync',
-              text: this.state.syncUserDetails,
-              iconProps: { iconName: 'Upload' },
-              onClick: this._syncUserPopup.bind(this),
-            },
+            // {
+            //   key: "deleteRow",
+            //   text: "Delete user(s)",
+            //   iconProps: { iconName: "Delete" },
+            //   onClick: this._onDeleteRow.bind(this),
+            // },
+            // {
+            //   key: 'sync',
+            //   text: this.state.syncUserDetails,
+            //   iconProps: { iconName: 'Upload', className: this.state.syncUsers.length == 0 ? '' : styles.sync_background },
+            //   onClick: this._syncUserPopup.bind(this),
+            //   className: this.state.syncUsers.length == 0 ? '' : styles.sync_background
+            // },
           ]}
         />
 

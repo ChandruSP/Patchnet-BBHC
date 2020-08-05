@@ -1,7 +1,7 @@
 export interface IVisitorsGroupProps {
   description: string;
   Title: string;
-  siteUrl: String;
+  siteUrl: string;
   currentContext: any;
   graphClient: any;
 }
