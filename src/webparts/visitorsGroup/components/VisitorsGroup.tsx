@@ -99,8 +99,8 @@ export default class VisitorsGroup extends React.Component<IVisitorsGroupProps, 
   visitorsGroupName = 'BBHC Provider SharePoint Viewers';
 
   visitorsList = 'VisitorsDetails';
-  // redirectURL = 'https://bbhcsyncvisitorstolist20200804061631.azurewebsites.net/BBHCVisitors/Index?id=';
-  redirectURL = 'http://localhost:51130/BBHCVisitors/Index?id=';
+  redirectURL = 'https://bbhcsyncvisitorstolist20200804061631.azurewebsites.net/BBHCVisitors/Index?id=';
+  // redirectURL = 'http://localhost:51130/BBHCVisitors/Index?id=';
 
   loginNamePrefix = 'i:0#.f|membership|';
   loginNameSuffix = '#ext#@chandrudemo.onmicrosoft.com';

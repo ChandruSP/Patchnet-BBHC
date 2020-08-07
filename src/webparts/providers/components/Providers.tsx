@@ -6,6 +6,8 @@ import {
   ISPHttpClientOptions,
   SPHttpClientResponse,
 } from "@microsoft/sp-http";
+import "@pnp/sp/sputilities";
+import { IEmailProperties } from "@pnp/sp/sputilities";
 
 import { Announced } from "office-ui-fabric-react/lib/Announced";
 import {
@@ -173,6 +175,10 @@ export default class Providers extends React.Component<
   readPermission = null;
   currentUser = null;
   userDetails = [];
+  azureGuestUsers = [];
+
+  loginNamePrefix = 'i:0#.f|membership|';
+  loginNameSuffix = '#ext#@browardbehavioralhc.onmicrosoft.com';
 
   constructor(props) {
     super(props);
@@ -186,6 +192,17 @@ export default class Providers extends React.Component<
     alertify.set("notifier", "position", "top-right");
 
     var that = this;
+
+    this.props.graphClient
+      .api("/users?$filter=userType eq 'Guest'")
+      .get()
+      .then((content: any) => {
+        this.azureGuestUsers = content.value;
+      })
+      .catch(err => {
+      });
+
+
     sp.web.roleDefinitions
       .getByName("Read")
       .get()
@@ -440,6 +457,69 @@ export default class Providers extends React.Component<
       alertify.error("Legal name is required");
       return;
     }
+
+    var newlyAdded = [];
+    if (this.state.editUsers) {
+      var existingUsers = this.state.editUsers.split(";");
+      var newUsers = this.state.AllUsers;
+      for (let index = 0; index < newUsers.length; index++) {
+        if (newUsers[index]) {
+          var exist = existingUsers.filter((c) => c == newUsers[index]);
+          if (exist.length == 0) {
+            newlyAdded.push(newUsers[index]);
+          }
+        }
+      }
+
+      var valid = true;
+      if (newlyAdded.length > 0) {
+        for (let index = 0; index < newlyAdded.length; index++) {
+          const user = newlyAdded[index];
+          var adUsers = this.azureGuestUsers.filter(c => c.mail == user);
+          if (adUsers.length == 0) {
+            alertify.error(user + ' is not a valid user');
+            valid = false;
+            break;
+          }
+        }
+      }
+
+      if (valid) {
+        if (newlyAdded.length > 0) {
+          this.sendMailToUsers(newlyAdded);
+        }
+        this.mainProcess();
+      }
+
+    } else {
+      this.sendMailToUsers(this.state.AllUsers);
+      this.mainProcess();
+    }
+
+  };
+
+  sendMailToUsers = (to) => {
+    var that = this;
+    var filepath = that.props.currentContext.pageContext.web.absoluteUrl;
+    const emailProps: IEmailProperties = {
+      To: to,
+      Subject: "Assigned to Provider",
+      Body:
+        "You have assigned to a <a href='" +
+        filepath +
+        "'>" +
+        that.state.formData.Title +
+        "</a> provider.",
+      AdditionalHeaders: {
+        "content-type": "text/html",
+      },
+    };
+    sp.utility.sendEmail(emailProps);
+  }
+
+  mainProcess = () => {
+
+    var formData = this.state.formData;
     var that = this;
     that.userDetails = [];
     this.newAddedUsers = [];
@@ -501,7 +581,7 @@ export default class Providers extends React.Component<
           var removeuser = newUsers.filter((c) => c == existingUsers[j]);
           if (removeuser.length == 0) {
             this.deletedUsers.push(existingUsers[j]);
-            providerData.Users = providerData.Users + existingUsers[j] +';';
+            providerData.Users = providerData.Users + existingUsers[j] + ';';
             that.setpermissionfornewuser(
               "TemplateLibrary/" + that.state.formData.TemplateType,
               existingUsers[j],
@@ -510,14 +590,14 @@ export default class Providers extends React.Component<
           }
         }
       }
-      if(providerData.Users){
+      if (providerData.Users) {
         this.removerMainFolderUserPermission(providerData);
       }
     }
 
     this.setState({ formData: formData });
     this.addToList(currentYear, this.state.formData);
-  };
+  }
 
   setpermissionfornewuser(folderPath, user, addpermission) {
     var reacthandler = this;

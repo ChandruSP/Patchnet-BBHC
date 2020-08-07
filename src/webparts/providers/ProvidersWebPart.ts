@@ -7,6 +7,8 @@ import {
 } from '@microsoft/sp-property-pane';
 import { BaseClientSideWebPart } from '@microsoft/sp-webpart-base';
 
+import { MSGraphClient, HttpClient } from '@microsoft/sp-http';
+
 import * as strings from 'ProvidersWebPartStrings';
 import Providers from './components/Providers';
 import { IProvidersProp } from './components/IProvidersProps';
@@ -15,22 +17,27 @@ export interface IProvidersWebPartProps {
   description: string;
 }
 
-export default class ProvidersWebPart extends BaseClientSideWebPart <IProvidersWebPartProps> {
+export default class ProvidersWebPart extends BaseClientSideWebPart<IProvidersWebPartProps> {
 
   public render(): void {
-   
-    var currentContext = this.context;
-   
-    const element: React.ReactElement<IProvidersProp> = React.createElement(
-      Providers,
-      {
-        description: this.properties.description,
-        currentContext: currentContext,
-        siteUrl: this.context.pageContext.web.absoluteUrl
-      }
-    );
 
-    ReactDom.render(element, this.domElement);
+    var currentContext = this.context;
+
+
+    this.context.msGraphClientFactory.getClient()
+      .then((_graphClient: MSGraphClient): void => {
+        const element: React.ReactElement<IProvidersProp> = React.createElement(
+          Providers,
+          {
+            description: this.properties.description,
+            currentContext: currentContext,
+            siteUrl: this.context.pageContext.web.absoluteUrl,
+            graphClient: _graphClient,
+          }
+        );
+
+        ReactDom.render(element, this.domElement);
+      });
   }
 
   protected onDispose(): void {
