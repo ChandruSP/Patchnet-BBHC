@@ -193,16 +193,6 @@ export default class Providers extends React.Component<
 
     var that = this;
 
-    this.props.graphClient
-      .api("/users?$filter=userType eq 'Guest'")
-      .get()
-      .then((content: any) => {
-        this.azureGuestUsers = content.value;
-      })
-      .catch(err => {
-      });
-
-
     sp.web.roleDefinitions
       .getByName("Read")
       .get()
@@ -458,6 +448,43 @@ export default class Providers extends React.Component<
       return;
     }
 
+    for (let index = 0; index < this.state.AllUsers.length; index++) {
+      const user = this.state.AllUsers[index];
+      if (!user) {
+        alertify.error(user + ' is not a valid user');
+        return;
+      }
+    }
+
+    this.checkInvitation(0, true);
+
+  };
+
+  checkInvitation = (index, valid) => {
+    var email = this.state.AllUsers[index];
+    this.props.graphClient
+      .api("/users?$filter=externalUserState eq 'Accepted' and mail eq '" + email + "'")
+      .get()
+      .then((content: any) => {
+        if (content.value.length == 0) {
+          valid = false;
+        }
+        if (!valid) {
+          alertify.error(email + '-pending accepetance');
+          return;
+        }
+        index = index + 1;
+        if (index < this.state.AllUsers.length) {
+          this.checkInvitation(index, valid);
+        } else {
+          this.otherProcess();
+        }
+      })
+      .catch(err => {
+      });
+  }
+
+  otherProcess = () => {
     var newlyAdded = [];
     if (this.state.editUsers) {
       var existingUsers = this.state.editUsers.split(";");
@@ -472,17 +499,6 @@ export default class Providers extends React.Component<
       }
 
       var valid = true;
-      if (newlyAdded.length > 0) {
-        for (let index = 0; index < newlyAdded.length; index++) {
-          const user = newlyAdded[index];
-          var adUsers = this.azureGuestUsers.filter(c => c.mail == user);
-          if (adUsers.length == 0) {
-            alertify.error(user + ' is not a valid user');
-            valid = false;
-            break;
-          }
-        }
-      }
 
       if (valid) {
         if (newlyAdded.length > 0) {
@@ -495,8 +511,7 @@ export default class Providers extends React.Component<
       this.sendMailToUsers(this.state.AllUsers);
       this.mainProcess();
     }
-
-  };
+  }
 
   sendMailToUsers = (to) => {
     var that = this;
@@ -1188,7 +1203,8 @@ export default class Providers extends React.Component<
   }
 
   _onDeleteRow() {
-    this.setState({ hideDeleteDialog: false });
+    alertify.error('vinoth.ck94@gmail.comaaaaaaaaassss-pending accepetance').set('resizable',true).resizeTo('100%',250); 
+    // this.setState({ hideDeleteDialog: false });
   }
 
   hideDelete() {
