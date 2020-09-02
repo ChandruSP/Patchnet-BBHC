@@ -80,12 +80,14 @@ const dropDown2Styles: Partial<IDropdownStyles> = {
   },
 };
 
+var listUrl = '';
+
 export default class ProviderDocuments extends React.Component<
   IProviderDocumentsProps,
   IBbhcState
-> {
+  > {
   currentYear = new Date().getFullYear();
-  rootFolder = "Providers Library";
+  rootFolder = "ProviderLibrary";
   templateLibrary = "TemplateLibrary";
   generalSubmission = "general submission";
   generalSubmissionChanged = false;
@@ -100,6 +102,11 @@ export default class ProviderDocuments extends React.Component<
     });
 
     alertify.set("notifier", "position", "top-right");
+
+    listUrl = this.props.currentContext.pageContext.web.absoluteUrl;
+    var siteindex = listUrl.toLocaleLowerCase().indexOf('sites');
+    listUrl = listUrl.substr(siteindex - 1) + '/Lists/';
+
     this.state = {
       folders: [],
       destinationPath: [],
@@ -117,13 +124,12 @@ export default class ProviderDocuments extends React.Component<
 
   getProviderMetaData() {
     var that = this;
-    sp.web.lists
-      .getByTitle("ProviderDetails")
+    sp.web.getList(listUrl + "ProviderDetails")
       .items.select("Title", "ContractId", "TemplateType")
       .filter(
         "substringof('" +
-          this.props.currentContext.pageContext.user.email.toLowerCase() +
-          "',Users) and IsDeleted eq 0"
+        this.props.currentContext.pageContext.user.email.toLowerCase() +
+        "',Users) and IsDeleted eq 0"
       )
       .get()
       .then((res) => {
@@ -187,8 +193,7 @@ export default class ProviderDocuments extends React.Component<
 
   loadUploadFolders(templateType) {
     var that = this;
-    sp.web.lists
-      .getByTitle("UploadFolders")
+    sp.web.getList(listUrl + "DocumentType")
       .items.select("Title", "TemplateType")
       .filter("TemplateType eq '" + templateType + "'")
       .get()
@@ -323,8 +328,7 @@ export default class ProviderDocuments extends React.Component<
                 .indexOf(that.generalSubmission) >= 0
             ) {
               result.file.listItemAllFields.get().then(function (fileData) {
-                sp.web.lists
-                  .getByTitle(that.rootFolder)
+                sp.web.getList(listUrl + that.rootFolder)
                   .items.getById(fileData.Id)
                   .update({ FileNotes: that.state.notes })
                   .then(function () {
@@ -547,19 +551,19 @@ export default class ProviderDocuments extends React.Component<
             {this.state.selectedPath
               .toLocaleLowerCase()
               .indexOf(this.generalSubmission) >= 0 ? (
-              <TextField
-                required
-                label="Notes"
-                multiline
-                rows={3}
-                onChange={(e) => this.inputChangeHandler.call(this, e)}
-                value={this.state.notes}
-                name="notes"
-                className={styles.notesinput_field}
-              ></TextField>
-            ) : (
-              ""
-            )}
+                <TextField
+                  required
+                  label="Notes"
+                  multiline
+                  rows={3}
+                  onChange={(e) => this.inputChangeHandler.call(this, e)}
+                  value={this.state.notes}
+                  name="notes"
+                  className={styles.notesinput_field}
+                ></TextField>
+              ) : (
+                ""
+              )}
           </div>
         </div>
       </div>

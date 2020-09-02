@@ -91,11 +91,13 @@ export interface IBbhcState {
   fileName: "";
 }
 
+var listUrl = '';
+
 export default class Bbhc extends React.Component<IBbhcProps, IBbhcState> {
   selUsers = [];
   allUsers = [];
   fileObj = null;
-  rootFolder = "Providers Library";
+  rootFolder = "ProviderLibrary";
   templateTypes = [{
     key: "Contract Providers",
     text: "Contract Providers",
@@ -108,6 +110,10 @@ export default class Bbhc extends React.Component<IBbhcProps, IBbhcState> {
     super(prop);
 
     alertify.set("notifier", "position", "top-right");
+
+    listUrl = this.props.context.pageContext.web.absoluteUrl;
+    var siteindex = listUrl.toLocaleLowerCase().indexOf('sites');
+    listUrl = listUrl.substr(siteindex - 1) + '/Lists/';
 
     this.state = {
       providerName: "",
@@ -284,8 +290,7 @@ export default class Bbhc extends React.Component<IBbhcProps, IBbhcState> {
   addToList(year, formData) {
     var currentMonth = new Date().getMonth();
     formData.ContractId = currentMonth >= 7 ? (formData.ContractId + '-' + currentYear) : (formData.ContractId + '-' + (currentYear - 1));
-    sp.web.lists
-      .getByTitle("ProviderDetails")
+    sp.web.getList(listUrl + "ProviderDetails")
       .items.add(formData)
       .then((res) => {
         this.createProvider(formData.Title, year, formData);

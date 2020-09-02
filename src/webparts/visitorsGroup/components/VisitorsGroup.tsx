@@ -93,13 +93,15 @@ export interface IVisitorsGroupState {
   syncUserDetails: string;
   syncUsers: any[];
 }
+var listUrl = '';
+
 
 export default class VisitorsGroup extends React.Component<IVisitorsGroupProps, IVisitorsGroupState> {
 
   visitorsGroupName = 'BBHC Provider SharePoint Viewers';
 
-  visitorsList = 'VisitorsDetails';
-  redirectURL = 'https://bbhcsyncvisitorstolist20200804061631.azurewebsites.net/BBHCVisitors/Index?id=';
+  visitorsList = 'InvitedUserStatus';
+  redirectURL = 'https://bbhcsyncvisitorstolist20200820124930.azurewebsites.net/BBHCVisitors/Index?id=';
   // redirectURL = 'http://localhost:51130/BBHCVisitors/Index?id=';
 
   loginNamePrefix = 'i:0#.f|membership|';
@@ -120,6 +122,11 @@ export default class VisitorsGroup extends React.Component<IVisitorsGroupProps, 
 
 
     alertify.set("notifier", "position", "top-right");
+
+    listUrl = this.props.currentContext.pageContext.web.absoluteUrl;
+    var siteindex = listUrl.toLocaleLowerCase().indexOf('sites');
+    listUrl = listUrl.substr(siteindex - 1) + '/Lists/';
+
 
     this.state = {
       selectionDetails: '',
@@ -168,8 +175,7 @@ export default class VisitorsGroup extends React.Component<IVisitorsGroupProps, 
   }
 
   syncUserDetails = () => {
-    sp.web.lists
-      .getByTitle(this.visitorsList)
+    sp.web.getList(listUrl + this.visitorsList)
       .items.filter("IsSync eq '0' and InvitationAccept eq '1'")
       .get()
       .then((res) => {
@@ -281,8 +287,7 @@ export default class VisitorsGroup extends React.Component<IVisitorsGroupProps, 
       InvitationAccept: false
     };
 
-    sp.web.lists
-      .getByTitle(this.visitorsList)
+    sp.web.getList(listUrl + this.visitorsList)
       .items.add(formData)
       .then((res) => {
 
@@ -376,8 +381,7 @@ export default class VisitorsGroup extends React.Component<IVisitorsGroupProps, 
         sp.web.siteGroups.getByName(this.visitorsGroupName).users
           .add(result.data.LoginName).then((d) => {
             user.IsSync = true;
-            sp.web.lists
-              .getByTitle(this.visitorsList)
+            sp.web.getList(listUrl + this.visitorsList)
               .items.getById(user.Id)
               .update(user)
               .then((res) => {
@@ -408,8 +412,7 @@ export default class VisitorsGroup extends React.Component<IVisitorsGroupProps, 
         sp.web.siteGroups.getByName(this.visitorsGroupName).users
           .add(result.data.LoginName).then((d) => {
             user.IsSync = true;
-            sp.web.lists
-              .getByTitle(this.visitorsList)
+            sp.web.getList(listUrl + this.visitorsList)
               .items.getById(user.Id)
               .update(user)
               .then((res) => {
@@ -432,8 +435,7 @@ export default class VisitorsGroup extends React.Component<IVisitorsGroupProps, 
   updateToList = () => {
     for (let index = 0; index < this.state.syncUsers.length; index++) {
       const user = this.state.syncUsers[index];
-      sp.web.lists
-        .getByTitle("ProviderDetails")
+      sp.web.getList(listUrl + "ProviderDetails")
         .items.getById(user.Id)
         .update(user)
         .then((res) => {

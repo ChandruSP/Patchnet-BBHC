@@ -33,6 +33,31 @@ export default class ProvidersWebPart extends BaseClientSideWebPart<IProvidersWe
             currentContext: currentContext,
             siteUrl: this.context.pageContext.web.absoluteUrl,
             graphClient: _graphClient,
+            providerAssignedHTML: `<html lang="en">
+            <head>
+              <meta charset="UTF-8" />
+              <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+              <title>Second</title>
+              <link
+                href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap"
+                rel="stylesheet"
+              />
+            </head>
+            <body style="font-family: 'Noto Sans JP', sans-serif;">
+              <p>Hi,</p>
+          
+              <p>Broward Behavioral Health has granted you access to your Provider SharePoint Library so you can upload your agreement documentation.</p>
+              <ol>
+                <li>
+                To login visit the BBHC Provider SharePoint Site ->
+                   <a href="http://provider.bbhcflorida.org/"
+                     >http://provider.bbhcflorida.org/</a
+                   >.
+                 </li>
+               </ol>
+             </body>
+           </html>
+           `
           }
         );
 

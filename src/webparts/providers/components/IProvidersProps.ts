@@ -3,4 +3,5 @@ export interface IProvidersProp {
   currentContext: any;
   siteUrl: string;
   graphClient: any;
+  providerAssignedHTML: string;
 }

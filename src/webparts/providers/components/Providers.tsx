@@ -145,6 +145,8 @@ export interface IDetailsListBasicExampleState {
   fileName: "";
 }
 
+var listUrl = '';
+
 export default class Providers extends React.Component<
   IProvidersProp,
   IDetailsListBasicExampleState
@@ -159,7 +161,7 @@ export default class Providers extends React.Component<
   selUsers = [];
   allUsers = [];
   fileObj = null;
-  rootFolder = "Providers Library";
+  rootFolder = "ProviderLibrary";
   templateTypes = [
     {
       key: "Contract Providers",
@@ -191,6 +193,10 @@ export default class Providers extends React.Component<
 
     alertify.set("notifier", "position", "top-right");
 
+    listUrl = this.props.currentContext.pageContext.web.absoluteUrl;
+    var siteindex = listUrl.toLocaleLowerCase().indexOf('sites');
+    listUrl = listUrl.substr(siteindex - 1) + '/Lists/';
+
     var that = this;
 
     sp.web.roleDefinitions
@@ -207,8 +213,7 @@ export default class Providers extends React.Component<
         that.contributePermission = res.Id;
       });
 
-    sp.web.lists
-      .getByTitle("UploadFolders")
+    sp.web.getList(listUrl + "DocumentType")
       .items.select("Title", "TemplateType")
       .get()
       .then((res) => {
@@ -309,8 +314,7 @@ export default class Providers extends React.Component<
 
   loadTableData() {
     var that = this;
-    sp.web.lists
-      .getByTitle("ProviderDetails")
+    sp.web.getList(listUrl + "ProviderDetails")
       .items.orderBy("Id", false)
       .select(
         "Title",
@@ -518,13 +522,8 @@ export default class Providers extends React.Component<
     var filepath = that.props.currentContext.pageContext.web.absoluteUrl;
     const emailProps: IEmailProperties = {
       To: to,
-      Subject: "Assigned to Provider",
-      Body:
-        "You have assigned to a <a href='" +
-        filepath +
-        "'>" +
-        that.state.formData.Title +
-        "</a> provider.",
+      Subject: "BBHC Provider Library has been shared with you",
+      Body: this.props.providerAssignedHTML,
       AdditionalHeaders: {
         "content-type": "text/html",
       },
@@ -806,8 +805,7 @@ export default class Providers extends React.Component<
         formData.Logs = formData.Logs + deletededUser;
       }
 
-      sp.web.lists
-        .getByTitle("ProviderDetails")
+      sp.web.getList(listUrl + "ProviderDetails")
         .items.getById(formData.Id)
         .update(formData)
         .then((res) => {
@@ -834,8 +832,7 @@ export default class Providers extends React.Component<
         "\nAdded by : " +
         this.props.currentContext.pageContext.user.displayName;
 
-      sp.web.lists
-        .getByTitle("ProviderDetails")
+      sp.web.getList(listUrl + "ProviderDetails")
         .items.add(formData)
         .then((res) => {
           that.createProvider(formData.Title, year, formData);
@@ -1203,8 +1200,7 @@ export default class Providers extends React.Component<
   }
 
   _onDeleteRow() {
-    alertify.error('vinoth.ck94@gmail.comaaaaaaaaassss-pending accepetance').set('resizable',true).resizeTo('100%',250); 
-    // this.setState({ hideDeleteDialog: false });
+    this.setState({ hideDeleteDialog: false });
   }
 
   hideDelete() {
@@ -1231,8 +1227,7 @@ export default class Providers extends React.Component<
       new Date() +
       "\nDeleted by : " +
       that.props.currentContext.pageContext.user.displayName;
-    sp.web.lists
-      .getByTitle("ProviderDetails")
+    sp.web.getList(listUrl + "ProviderDetails")
       .items.getById(formData.Id)
       .update(formData)
       .then((res) => {
