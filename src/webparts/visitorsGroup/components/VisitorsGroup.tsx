@@ -569,7 +569,7 @@ export default class VisitorsGroup extends React.Component<IVisitorsGroupProps, 
           items={[
             {
               key: "addRow",
-              text: "Add",
+              text: "Invite user",
               iconProps: { iconName: "Add" },
               onClick: this._onAddRow.bind(this),
             },

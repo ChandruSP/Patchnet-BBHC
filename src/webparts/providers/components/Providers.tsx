@@ -1556,7 +1556,7 @@ export default class Providers extends React.Component<
           items={[
             {
               key: "addRow",
-              text: "Add",
+              text: "Add provider",
               iconProps: { iconName: "Add" },
               onClick: this._onAddRow.bind(this),
             },
