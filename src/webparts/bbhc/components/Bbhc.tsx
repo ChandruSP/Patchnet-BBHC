@@ -1,61 +1,44 @@
-import * as React from "react";
-import styles from "./Bbhc.module.scss";
-import { IBbhcProps } from "./IBbhcProps";
-import { escape } from "@microsoft/sp-lodash-subset";
+import { PrimaryButton } from "@fluentui/react";
+import { IconButton } from "@fluentui/react/lib/Button";
 import "@pnp/polyfill-ie11";
 import { sp } from "@pnp/sp";
-import "@pnp/sp/webs";
-import "@pnp/sp/lists";
-import "@pnp/sp/items";
-
-import "@pnp/sp/webs";
 import "@pnp/sp/folders";
+import "@pnp/sp/items";
+import "@pnp/sp/lists";
 import "@pnp/sp/site-users/web";
-
-import { IItemAddResult } from "@pnp/sp/items";
-
-import { PrimaryButton } from "@fluentui/react";
-import { Label } from "office-ui-fabric-react/lib/Label";
-import { Image, IImageProps } from "office-ui-fabric-react/lib/Image";
-
-import { getId } from "office-ui-fabric-react/lib/Utilities";
-import {
-  IStackTokens,
-  Stack,
-  IStackProps,
-  IStackStyles,
-} from "office-ui-fabric-react/lib/Stack";
-import * as ReactIcons from "@fluentui/react-icons";
-import { mergeStyleSets } from "office-ui-fabric-react/lib/Styling";
-import { IconButton } from "@fluentui/react/lib/Button";
-
+import "@pnp/sp/webs";
 import "alertifyjs";
-
-import "../../../ExternalRef/CSS/style.css";
-import "../../../ExternalRef/CSS/alertify.min.css";
-var alertify: any = require("../../../ExternalRef/JS/alertify.min.js");
-
+import {
+  ChoiceGroup,
+  IChoiceGroupOption,
+} from "office-ui-fabric-react/lib/ChoiceGroup";
+import {
+  DropdownMenuItemType,
+  IDropdownOption,
+} from "office-ui-fabric-react/lib/Dropdown";
+import { Image } from "office-ui-fabric-react/lib/Image";
+import { Label } from "office-ui-fabric-react/lib/Label";
 import {
   Pivot,
   PivotItem,
   PivotLinkSize,
 } from "office-ui-fabric-react/lib/Pivot";
-
-import { ChoiceGroup, IChoiceGroupOption } from 'office-ui-fabric-react/lib/ChoiceGroup';
-
 import {
-  PeoplePicker,
-  PrincipalType,
-} from "@pnp/spfx-controls-react/lib/PeoplePicker";
-
-import {
-  Dropdown,
-  DropdownMenuItemType,
-  IDropdownStyles,
-  IDropdownOption,
-} from "office-ui-fabric-react/lib/Dropdown";
-
+  IStackProps,
+  IStackStyles,
+  IStackTokens,
+  Stack,
+} from "office-ui-fabric-react/lib/Stack";
+import { mergeStyleSets } from "office-ui-fabric-react/lib/Styling";
+import { TextField } from "office-ui-fabric-react/lib/TextField";
+import { getId } from "office-ui-fabric-react/lib/Utilities";
+import * as React from "react";
 import { ExcelRenderer } from "react-excel-renderer";
+import "../../../ExternalRef/CSS/alertify.min.css";
+import "../../../ExternalRef/CSS/style.css";
+import styles from "./Bbhc.module.scss";
+import { IBbhcProps } from "./IBbhcProps";
+var alertify: any = require("../../../ExternalRef/JS/alertify.min.js");
 
 var folders: IDropdownOption[] = [];
 const attachImageStyles = {
@@ -66,12 +49,6 @@ const attachImageStyles = {
 
 const currentYear = new Date().getFullYear();
 const fileId = getId("anInput");
-
-import {
-  TextField,
-  MaskedTextField,
-} from "office-ui-fabric-react/lib/TextField";
-import { Icon } from "office-ui-fabric-react/lib/Icon";
 
 export interface IBbhcState {
   providerName: "";
@@ -91,20 +68,23 @@ export interface IBbhcState {
   fileName: "";
 }
 
-var listUrl = '';
+var listUrl = "";
 
 export default class Bbhc extends React.Component<IBbhcProps, IBbhcState> {
   selUsers = [];
   allUsers = [];
   fileObj = null;
   rootFolder = "ProviderLibrary";
-  templateTypes = [{
-    key: "Contract Providers",
-    text: "Contract Providers",
-  }, {
-    key: "Agreement Providers",
-    text: "Agreement Providers",
-  }]
+  templateTypes = [
+    {
+      key: "Contract Providers",
+      text: "Contract Providers",
+    },
+    {
+      key: "Agreement Providers",
+      text: "Agreement Providers",
+    },
+  ];
 
   constructor(prop: IBbhcProps, state: IBbhcState) {
     super(prop);
@@ -112,8 +92,8 @@ export default class Bbhc extends React.Component<IBbhcProps, IBbhcState> {
     alertify.set("notifier", "position", "top-right");
 
     listUrl = this.props.context.pageContext.web.absoluteUrl;
-    var siteindex = listUrl.toLocaleLowerCase().indexOf('sites');
-    listUrl = listUrl.substr(siteindex - 1) + '/Lists/';
+    var siteindex = listUrl.toLocaleLowerCase().indexOf("sites");
+    listUrl = listUrl.substr(siteindex - 1) + "/Lists/";
 
     this.state = {
       providerName: "",
@@ -289,8 +269,12 @@ export default class Bbhc extends React.Component<IBbhcProps, IBbhcState> {
 
   addToList(year, formData) {
     var currentMonth = new Date().getMonth();
-    formData.ContractId = currentMonth >= 7 ? (formData.ContractId + '-' + currentYear) : (formData.ContractId + '-' + (currentYear - 1));
-    sp.web.getList(listUrl + "ProviderDetails")
+    formData.ContractId =
+      currentMonth >= 7
+        ? formData.ContractId + "-" + currentYear
+        : formData.ContractId + "-" + (currentYear - 1);
+    sp.web
+      .getList(listUrl + "ProviderDetails")
       .items.add(formData)
       .then((res) => {
         this.createProvider(formData.Title, year, formData);
@@ -319,7 +303,12 @@ export default class Bbhc extends React.Component<IBbhcProps, IBbhcState> {
     var folderName =
       reacthandler.rootFolder + "/" + "FY " + (year - 1) + "-" + year;
     sp.web.folders.add(folderName + "/" + providerName).then(function (data) {
-      reacthandler.getFolder("TemplateLibrary/" + formData.TemplateType, providerName, year, formData);
+      reacthandler.getFolder(
+        "TemplateLibrary/" + formData.TemplateType,
+        providerName,
+        year,
+        formData
+      );
     });
     alertify.success("Provider is created");
   };
@@ -346,7 +335,12 @@ export default class Bbhc extends React.Component<IBbhcProps, IBbhcState> {
     );
     // reacthandler.createFolder(clonedUrl);
     sp.web.folders.add(clonedUrl).then((res) => {
-      reacthandler.getFolder(data[index].ServerRelativeUrl, providerName, year, formData);
+      reacthandler.getFolder(
+        data[index].ServerRelativeUrl,
+        providerName,
+        year,
+        formData
+      );
       index = index + 1;
       if (index < data.length) {
         reacthandler.processFolder(index, data, providerName, year, formData);
@@ -384,7 +378,7 @@ export default class Bbhc extends React.Component<IBbhcProps, IBbhcState> {
             ContractId: rowData[2],
             LegalName: rowData[3],
             Users: rowData[4],
-            TemplateType: rowData[5]
+            TemplateType: rowData[5],
           };
           if (formdata.Title) {
             reacthandler.addToList(currentYear, formdata);
@@ -416,7 +410,10 @@ export default class Bbhc extends React.Component<IBbhcProps, IBbhcState> {
     this.setState({ AllUsers: allusers });
   }
 
-  templateChange(ev: React.FormEvent<HTMLInputElement>, option: IChoiceGroupOption): void {
+  templateChange(
+    ev: React.FormEvent<HTMLInputElement>,
+    option: IChoiceGroupOption
+  ): void {
     var formData = this.state.formData;
     formData.TemplateType = option.key;
     this.setState({ formData: formData });
@@ -483,10 +480,13 @@ export default class Bbhc extends React.Component<IBbhcProps, IBbhcState> {
       <div className={styles.bbhc}>
         <Pivot linkSize={PivotLinkSize.large}>
           <PivotItem headerText="Add Provider">
-
             <Stack {...columnstyle}>
-
-              <ChoiceGroup defaultSelectedKey={this.state.formData.TemplateType} options={this.templateTypes} onChange={this.templateChange.bind(this)} label="Template Type" />
+              <ChoiceGroup
+                defaultSelectedKey={this.state.formData.TemplateType}
+                options={this.templateTypes}
+                onChange={this.templateChange.bind(this)}
+                label="Template Type"
+              />
 
               <TextField
                 label="Provider ID"
@@ -519,8 +519,6 @@ export default class Bbhc extends React.Component<IBbhcProps, IBbhcState> {
                 value={this.state.formData.LegalName}
                 name="LegalName"
               ></TextField>
-
-
 
               {/* <PeoplePicker
                 context={this.props.context}

@@ -18,7 +18,6 @@ import "@pnp/sp/site-users/web";
 
 import styles from "./VisitorsGroup.module.scss";
 
-
 import { IItemAddResult } from "@pnp/sp/items";
 
 import { Label } from "office-ui-fabric-react/lib/Label";
@@ -79,8 +78,7 @@ import { Image, IImageProps } from "office-ui-fabric-react/lib/Image";
 import "@pnp/sp/sputilities";
 import { IEmailProperties } from "@pnp/sp/sputilities";
 
-import { IVisitorsGroupProps } from './IVisitorsGroupProps';
-
+import { IVisitorsGroupProps } from "./IVisitorsGroupProps";
 
 export interface IVisitorsGroupState {
   selectionDetails: string;
@@ -93,20 +91,24 @@ export interface IVisitorsGroupState {
   syncUserDetails: string;
   syncUsers: any[];
 }
-var listUrl = '';
+var listUrl = "";
 
+export default class VisitorsGroup extends React.Component<
+  IVisitorsGroupProps,
+  IVisitorsGroupState
+> {
+  visitorsGroupName = "BBHC Provider SharePoint Viewers";
 
-export default class VisitorsGroup extends React.Component<IVisitorsGroupProps, IVisitorsGroupState> {
+  visitorsList = "InvitedUserStatus";
+  redirectURL =
+    "https://bbhcsyncvisitorstolistlive.azurewebsites.net/BBHCVisitors/Index?id="; // This is for live
 
-  visitorsGroupName = 'BBHC Provider SharePoint Viewers';
-
-  visitorsList = 'InvitedUserStatus';
-  redirectURL = 'https://bbhcsyncvisitorstolist20200820124930.azurewebsites.net/BBHCVisitors/Index?id=';
+  //redirectURL =
+  "https://bbhcsyncvisitorstolist20200820124930.azurewebsites.net/BBHCVisitors/Index?id="; // This is for dev
   // redirectURL = 'http://localhost:51130/BBHCVisitors/Index?id=';
 
-  loginNamePrefix = 'i:0#.f|membership|';
-  loginNameSuffix = '#ext#@chandrudemo.onmicrosoft.com';
-
+  loginNamePrefix = "i:0#.f|membership|";
+  loginNameSuffix = "#ext#@chandrudemo.onmicrosoft.com";
 
   private _selection: Selection;
   private _columns: IColumn[];
@@ -120,24 +122,22 @@ export default class VisitorsGroup extends React.Component<IVisitorsGroupProps, 
       },
     });
 
-
     alertify.set("notifier", "position", "top-right");
 
     listUrl = this.props.currentContext.pageContext.web.absoluteUrl;
-    var siteindex = listUrl.toLocaleLowerCase().indexOf('sites');
-    listUrl = listUrl.substr(siteindex - 1) + '/Lists/';
-
+    var siteindex = listUrl.toLocaleLowerCase().indexOf("sites");
+    listUrl = listUrl.substr(siteindex - 1) + "/Lists/";
 
     this.state = {
-      selectionDetails: '',
+      selectionDetails: "",
       items: [],
       allItems: [],
       hideDeleteDialog: true,
       hideAddDialog: true,
       hideSyncDialog: true,
-      email: '',
-      syncUserDetails: '',
-      syncUsers: []
+      email: "",
+      syncUserDetails: "",
+      syncUsers: [],
     };
 
     this.syncUserDetails();
@@ -169,43 +169,49 @@ export default class VisitorsGroup extends React.Component<IVisitorsGroupProps, 
         isSorted: true,
         isSortedDescending: false,
         onColumnClick: this._onColumnClick,
-      }
+      },
     ];
     this.loadVisitors();
   }
 
   syncUserDetails = () => {
-    sp.web.getList(listUrl + this.visitorsList)
+    sp.web
+      .getList(listUrl + this.visitorsList)
       .items.filter("IsSync eq '0' and InvitationAccept eq '1'")
       .get()
       .then((res) => {
-        this.setState({ syncUserDetails: res.length + ' user(s) to sync', syncUsers: res });
+        this.setState({
+          syncUserDetails: res.length + " user(s) to sync",
+          syncUsers: res,
+        });
         if (this.state.syncUsers.length == 0) {
           this.setState({ hideSyncDialog: true });
         }
       });
-  }
+  };
 
   loadVisitors() {
-    sp.web.siteGroups.getByName(this.visitorsGroupName).users.get().then((result) => {
-      var allItems = this.state.items;
-      allItems = [];
-      for (let index = 0; index < result.length; index++) {
-        const element = result[index];
-        allItems.push({
-          Id: element.Id,
-          Title: element.Title,
-          Email: element.Email
+    sp.web.siteGroups
+      .getByName(this.visitorsGroupName)
+      .users.get()
+      .then((result) => {
+        var allItems = this.state.items;
+        allItems = [];
+        for (let index = 0; index < result.length; index++) {
+          const element = result[index];
+          allItems.push({
+            Id: element.Id,
+            Title: element.Title,
+            Email: element.Email,
+          });
+        }
+        this.setState({
+          items: allItems,
+          allItems: allItems,
+          selectionDetails: this._getSelectionDetails(),
         });
-      }
-      this.setState({
-        items: allItems,
-        allItems: allItems,
-        selectionDetails: this._getSelectionDetails(),
       });
-    });
   }
-
 
   _onColumnClick = (
     ev: React.MouseEvent<HTMLElement>,
@@ -235,7 +241,6 @@ export default class VisitorsGroup extends React.Component<IVisitorsGroupProps, 
     });
   };
 
-
   _copyAndSort<T>(
     items: T[],
     columnKey: string,
@@ -256,14 +261,13 @@ export default class VisitorsGroup extends React.Component<IVisitorsGroupProps, 
     this.setState({
       items: text
         ? this.state.allItems.filter(
-          (i) => i.Title.toLowerCase().indexOf(text) > -1
-        )
+            (i) => i.Title.toLowerCase().indexOf(text) > -1
+          )
         : this.state.allItems,
     });
   };
 
   _onAddRow() {
-
     // this.props.graphClient
     //   .api('/me')
     //   .get()
@@ -273,42 +277,42 @@ export default class VisitorsGroup extends React.Component<IVisitorsGroupProps, 
     //   .catch(err => {
     //   });
 
-    this.setState({ hideAddDialog: false, email: '' });
+    this.setState({ hideAddDialog: false, email: "" });
   }
 
   submitUser = () => {
     if (!this.state.email) {
-      alertify.error('Email is required');
+      alertify.error("Email is required");
       return;
     }
     var formData = {
       Title: this.state.email,
       IsSync: false,
-      InvitationAccept: false
+      InvitationAccept: false,
     };
 
-    sp.web.getList(listUrl + this.visitorsList)
+    sp.web
+      .getList(listUrl + this.visitorsList)
       .items.add(formData)
       .then((res) => {
-
         var inviteData = {
-          "invitedUserEmailAddress": this.state.email,
-          "sendInvitationMessage": true,
-          "inviteRedirectUrl": this.redirectURL + btoa(res.data.Id + '-Id')
+          invitedUserEmailAddress: this.state.email,
+          sendInvitationMessage: true,
+          inviteRedirectUrl: this.redirectURL + btoa(res.data.Id + "-Id"),
         };
 
         this.props.graphClient
-          .api('/invitations')
+          .api("/invitations")
           .post(inviteData)
           .then((content: any) => {
-            alertify.success('Invitation sent successfully.');
-            this.setState({ email: '', hideAddDialog: true });
+            alertify.success("Invitation sent successfully.");
+            this.setState({ email: "", hideAddDialog: true });
           })
-          .catch(err => {
-            alertify.error('Error while sending invitation.');
+          .catch((err) => {
+            alertify.error("Error while sending invitation.");
           });
       });
-  }
+  };
 
   hideDelete() {
     this.setState({ hideDeleteDialog: true });
@@ -325,20 +329,23 @@ export default class VisitorsGroup extends React.Component<IVisitorsGroupProps, 
     } else {
       this.setState({ hideDeleteDialog: true });
     }
-  }
+  };
 
   deleteUser = (index, item) => {
-    sp.web.siteGroups.getByName(this.visitorsGroupName).users.removeById(item[index].Id).then((res) => {
-      index = index + 1;
-      if (index < item.length) {
-        this.deleteUser(index, item);
-      } else {
-        this.loadVisitors();
-        this.setState({ hideDeleteDialog: true });
-        alertify.success('Users(s) deleted successfully');
-      }
-    });
-  }
+    sp.web.siteGroups
+      .getByName(this.visitorsGroupName)
+      .users.removeById(item[index].Id)
+      .then((res) => {
+        index = index + 1;
+        if (index < item.length) {
+          this.deleteUser(index, item);
+        } else {
+          this.loadVisitors();
+          this.setState({ hideDeleteDialog: true });
+          alertify.success("Users(s) deleted successfully");
+        }
+      });
+  };
 
   private _getSelectionDetails(): string {
     const selectionCount = this._selection.getSelectedCount();
@@ -358,10 +365,9 @@ export default class VisitorsGroup extends React.Component<IVisitorsGroupProps, 
 
   inputChangeHandler(e) {
     this.setState({
-      email: e.target.value
+      email: e.target.value,
     });
   }
-
 
   _syncUserPopup() {
     if (this.state.syncUsers.length > 0) {
@@ -371,80 +377,97 @@ export default class VisitorsGroup extends React.Component<IVisitorsGroupProps, 
 
   closesyncpopup = () => {
     this.setState({ hideSyncDialog: true });
-  }
+  };
 
   syncsingleuser = (index) => {
     var user = this.state.syncUsers[index];
-    var emailId = this.loginNamePrefix + user.Title.replace('@', '_') + this.loginNameSuffix;
-    sp.web.ensureUser(emailId).then((result) => {
-      if (result) {
-        sp.web.siteGroups.getByName(this.visitorsGroupName).users
-          .add(result.data.LoginName).then((d) => {
-            user.IsSync = true;
-            sp.web.getList(listUrl + this.visitorsList)
-              .items.getById(user.Id)
-              .update(user)
-              .then((res) => {
-                alertify.success('User synced successfully.');
-                this.loadVisitors();
-                this.syncUserDetails();
-              });
-          });
-      } else {
-        alertify.error('User cannot be found.');
-      }
-    }).catch((err) => {
-      alertify.error('User cannot be found.');
-    });
-  }
+    var emailId =
+      this.loginNamePrefix +
+      user.Title.replace("@", "_") +
+      this.loginNameSuffix;
+    sp.web
+      .ensureUser(emailId)
+      .then((result) => {
+        if (result) {
+          sp.web.siteGroups
+            .getByName(this.visitorsGroupName)
+            .users.add(result.data.LoginName)
+            .then((d) => {
+              user.IsSync = true;
+              sp.web
+                .getList(listUrl + this.visitorsList)
+                .items.getById(user.Id)
+                .update(user)
+                .then((res) => {
+                  alertify.success("User synced successfully.");
+                  this.loadVisitors();
+                  this.syncUserDetails();
+                });
+            });
+        } else {
+          alertify.error("User cannot be found.");
+        }
+      })
+      .catch((err) => {
+        alertify.error("User cannot be found.");
+      });
+  };
 
   syncalluser = () => {
     if (this.state.syncUsers.length > 0) {
       this.synconebyone(0);
     }
-  }
+  };
 
   synconebyone = (index) => {
     var user = this.state.syncUsers[index];
-    var emailId = this.loginNamePrefix + user.Title.replace('@', '_') + this.loginNameSuffix;
-    sp.web.ensureUser(emailId).then((result) => {
-      if (result) {
-        sp.web.siteGroups.getByName(this.visitorsGroupName).users
-          .add(result.data.LoginName).then((d) => {
-            user.IsSync = true;
-            sp.web.getList(listUrl + this.visitorsList)
-              .items.getById(user.Id)
-              .update(user)
-              .then((res) => {
-                index = index + 1;
-                if (index < this.state.syncUsers.length) {
-                  this.synconebyone(index);
-                } else {
-                  alertify.success('User(s) synced successfully.');
-                  this.loadVisitors();
-                  this.syncUserDetails();
-                }
-              });
-          });
-      }
-    }).catch((err) => {
-      alertify.error('User cannot be found.');
-    });
-  }
+    var emailId =
+      this.loginNamePrefix +
+      user.Title.replace("@", "_") +
+      this.loginNameSuffix;
+    sp.web
+      .ensureUser(emailId)
+      .then((result) => {
+        if (result) {
+          sp.web.siteGroups
+            .getByName(this.visitorsGroupName)
+            .users.add(result.data.LoginName)
+            .then((d) => {
+              user.IsSync = true;
+              sp.web
+                .getList(listUrl + this.visitorsList)
+                .items.getById(user.Id)
+                .update(user)
+                .then((res) => {
+                  index = index + 1;
+                  if (index < this.state.syncUsers.length) {
+                    this.synconebyone(index);
+                  } else {
+                    alertify.success("User(s) synced successfully.");
+                    this.loadVisitors();
+                    this.syncUserDetails();
+                  }
+                });
+            });
+        }
+      })
+      .catch((err) => {
+        alertify.error("User cannot be found.");
+      });
+  };
 
   updateToList = () => {
     for (let index = 0; index < this.state.syncUsers.length; index++) {
       const user = this.state.syncUsers[index];
-      sp.web.getList(listUrl + "ProviderDetails")
+      sp.web
+        .getList(listUrl + "ProviderDetails")
         .items.getById(user.Id)
         .update(user)
-        .then((res) => {
-        });
+        .then((res) => {});
     }
-  }
+  };
 
   public render(): React.ReactElement<IVisitorsGroupProps> {
-
     const exampleChildClass = mergeStyles({
       display: "block",
       marginBottom: "0",
@@ -528,7 +551,6 @@ export default class VisitorsGroup extends React.Component<IVisitorsGroupProps, 
       isBlocking: true,
       topOffsetFixed: false,
     };
-
 
     const iconcolumnstyle: Partial<IStackProps> = {
       tokens: {
@@ -648,7 +670,6 @@ export default class VisitorsGroup extends React.Component<IVisitorsGroupProps, 
           styles={dialogStyles}
         >
           <Stack {...columnstyle}>
-
             <TextField
               label="Email ID"
               onChange={(e) => this.inputChangeHandler.call(this, e)}
@@ -657,21 +678,21 @@ export default class VisitorsGroup extends React.Component<IVisitorsGroupProps, 
               required
               className={styles.input_field}
             ></TextField>
-
           </Stack>
 
           <DialogFooter>
             <PrimaryButton
               onClick={this.submitUser}
               className={styles.button_primary}
-            >Submit</PrimaryButton>
-            <DefaultButton onClick={(e) => this.setState({ hideAddDialog: true })} text="Close" />
+            >
+              Submit
+            </PrimaryButton>
+            <DefaultButton
+              onClick={(e) => this.setState({ hideAddDialog: true })}
+              text="Close"
+            />
           </DialogFooter>
-
         </Dialog>
-
-
-
 
         <Dialog
           hidden={this.state.hideSyncDialog}
@@ -679,45 +700,45 @@ export default class VisitorsGroup extends React.Component<IVisitorsGroupProps, 
           minWidth="400px"
           styles={dialogStyles}
         >
-
-          {
-            this.state.syncUsers.map((user, index) => {
-              return (
-                <div>
-                  <Stack horizontal tokens={stackTokens} styles={stackStyles}>
-                    <Stack {...columnstyle}>
-                      <TextField
-                        value={user.Title}
-                        readOnly={true}
-                        className={styles.input_field}
-                      ></TextField>
-                    </Stack>
-
-                    <Stack {...iconcolumnstyle}>
-                      <IconButton
-                        iconProps={{ iconName: "Upload" }}
-                        title="Sync User"
-                        ariaLabel="Sync"
-                        onClick={this.syncsingleuser.bind(this, index)}
-                        className={styles.primary_button}
-                      />
-                    </Stack>
+          {this.state.syncUsers.map((user, index) => {
+            return (
+              <div>
+                <Stack horizontal tokens={stackTokens} styles={stackStyles}>
+                  <Stack {...columnstyle}>
+                    <TextField
+                      value={user.Title}
+                      readOnly={true}
+                      className={styles.input_field}
+                    ></TextField>
                   </Stack>
-                </div>
-              )
-            })
-          }
+
+                  <Stack {...iconcolumnstyle}>
+                    <IconButton
+                      iconProps={{ iconName: "Upload" }}
+                      title="Sync User"
+                      ariaLabel="Sync"
+                      onClick={this.syncsingleuser.bind(this, index)}
+                      className={styles.primary_button}
+                    />
+                  </Stack>
+                </Stack>
+              </div>
+            );
+          })}
 
           <DialogFooter>
             <PrimaryButton
               onClick={this.syncalluser}
               className={styles.button_primary}
-            >Sync All</PrimaryButton>
-            <DefaultButton onClick={this.closesyncpopup.bind(this)} text="Close" />
+            >
+              Sync All
+            </PrimaryButton>
+            <DefaultButton
+              onClick={this.closesyncpopup.bind(this)}
+              text="Close"
+            />
           </DialogFooter>
-
         </Dialog>
-
       </div>
     );
   }

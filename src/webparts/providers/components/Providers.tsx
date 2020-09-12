@@ -1,97 +1,76 @@
-import * as React from "react";
-
-import styles from "./Providers.module.scss";
+import { IconButton } from "@fluentui/react/lib/Button";
 import {
-  SPHttpClient,
   ISPHttpClientOptions,
+  SPHttpClient,
   SPHttpClientResponse,
 } from "@microsoft/sp-http";
+import "@pnp/polyfill-ie11";
+import { sp } from "@pnp/sp";
+import "@pnp/sp/fields";
+import "@pnp/sp/files";
+import "@pnp/sp/folders";
+import "@pnp/sp/items";
+import "@pnp/sp/lists";
+import "@pnp/sp/security/web";
+import "@pnp/sp/site-groups";
+import "@pnp/sp/site-users/web";
 import "@pnp/sp/sputilities";
 import { IEmailProperties } from "@pnp/sp/sputilities";
-
+import "@pnp/sp/webs";
+import "alertifyjs";
 import { Announced } from "office-ui-fabric-react/lib/Announced";
 import {
-  TextField,
-  ITextFieldStyles,
-} from "office-ui-fabric-react/lib/TextField";
-import {
-  DetailsList,
-  DetailsListLayoutMode,
-  Selection,
-  IColumn,
-  IDetailsListStyles,
-} from "office-ui-fabric-react/lib/DetailsList";
-import { MarqueeSelection } from "office-ui-fabric-react/lib/MarqueeSelection";
-import { Fabric } from "office-ui-fabric-react/lib/Fabric";
-import { mergeStyles } from "office-ui-fabric-react/lib/Styling";
-import { Link } from "office-ui-fabric-react/lib/Link";
-
+  DefaultButton,
+  PrimaryButton,
+} from "office-ui-fabric-react/lib/Button";
 import {
   ChoiceGroup,
   IChoiceGroupOption,
   IChoiceGroupStyles,
 } from "office-ui-fabric-react/lib/ChoiceGroup";
-
-import { Label } from "office-ui-fabric-react/lib/Label";
-import { Image, IImageProps } from "office-ui-fabric-react/lib/Image";
 import {
   CommandBar,
   ICommandBarStyles,
 } from "office-ui-fabric-react/lib/CommandBar";
-
-import { ExcelRenderer } from "react-excel-renderer";
-import { useId, useBoolean } from "@uifabric/react-hooks";
-
-import { getId } from "office-ui-fabric-react/lib/Utilities";
 import {
-  IStackTokens,
-  Stack,
-  IStackProps,
-  IStackStyles,
-} from "office-ui-fabric-react/lib/Stack";
-import * as ReactIcons from "@fluentui/react-icons";
-import { mergeStyleSets } from "office-ui-fabric-react/lib/Styling";
-import { IconButton } from "@fluentui/react/lib/Button";
-
+  DetailsList,
+  DetailsListLayoutMode,
+  IColumn,
+  IDetailsListStyles,
+  Selection,
+} from "office-ui-fabric-react/lib/DetailsList";
 import {
   Dialog,
-  DialogType,
   DialogFooter,
+  DialogType,
   IDialogStyles,
 } from "office-ui-fabric-react/lib/Dialog";
+import { IDropdownOption } from "office-ui-fabric-react/lib/Dropdown";
+import { Fabric } from "office-ui-fabric-react/lib/Fabric";
+import { Link } from "office-ui-fabric-react/lib/Link";
+import { MarqueeSelection } from "office-ui-fabric-react/lib/MarqueeSelection";
 import {
-  DefaultButton,
-  PrimaryButton,
-} from "office-ui-fabric-react/lib/Button";
-
-import "@pnp/polyfill-ie11";
-import { sp } from "@pnp/sp";
-import "@pnp/sp/webs";
-import "@pnp/sp/lists";
-import "@pnp/sp/items";
-
-import "@pnp/sp/webs";
-import "@pnp/sp/folders";
-import "@pnp/sp/fields";
-import "@pnp/sp/files";
-import "@pnp/sp/security/web";
-import "@pnp/sp/site-users/web";
-import { PermissionKind } from "@pnp/sp/security";
-
+  IStackProps,
+  IStackStyles,
+  IStackTokens,
+  Stack,
+} from "office-ui-fabric-react/lib/Stack";
 import {
-  Dropdown,
-  DropdownMenuItemType,
-  IDropdownStyles,
-  IDropdownOption,
-} from "office-ui-fabric-react/lib/Dropdown";
-
-import "alertifyjs";
-
-import "../../../ExternalRef/CSS/style.css";
+  mergeStyles,
+  mergeStyleSets,
+} from "office-ui-fabric-react/lib/Styling";
+import {
+  ITextFieldStyles,
+  TextField,
+} from "office-ui-fabric-react/lib/TextField";
+import { getId } from "office-ui-fabric-react/lib/Utilities";
+import * as React from "react";
 import "../../../ExternalRef/CSS/alertify.min.css";
-var alertify: any = require("../../../ExternalRef/JS/alertify.min.js");
-
+import "../../../ExternalRef/CSS/style.css";
 import { IProvidersProp } from "./IProvidersProps";
+import styles from "./Providers.module.scss";
+
+var alertify: any = require("../../../ExternalRef/JS/alertify.min.js");
 
 const exampleChildClass = mergeStyles({
   display: "block",
@@ -103,6 +82,7 @@ const textFieldStyles: Partial<ITextFieldStyles> = {
 };
 
 const currentYear = new Date().getFullYear();
+
 const fileId = getId("anInput");
 
 export interface ILocalProvidersProp {
@@ -145,12 +125,12 @@ export interface IDetailsListBasicExampleState {
   fileName: "";
 }
 
-var listUrl = '';
+var listUrl = "";
 
 export default class Providers extends React.Component<
   IProvidersProp,
   IDetailsListBasicExampleState
-  > {
+> {
   private _selection: Selection;
   private _columns: IColumn[];
 
@@ -179,8 +159,9 @@ export default class Providers extends React.Component<
   userDetails = [];
   azureGuestUsers = [];
 
-  loginNamePrefix = 'i:0#.f|membership|';
-  loginNameSuffix = '#ext#@browardbehavioralhc.onmicrosoft.com';
+  loginNamePrefix = "i:0#.f|membership|";
+  loginNameSuffix = "#ext#@browardbehavioralhc.onmicrosoft.com";
+  visitorsGroupName = "BBHC Provider SharePoint Viewers";
 
   constructor(props) {
     super(props);
@@ -194,8 +175,8 @@ export default class Providers extends React.Component<
     alertify.set("notifier", "position", "top-right");
 
     listUrl = this.props.currentContext.pageContext.web.absoluteUrl;
-    var siteindex = listUrl.toLocaleLowerCase().indexOf('sites');
-    listUrl = listUrl.substr(siteindex - 1) + '/Lists/';
+    var siteindex = listUrl.toLocaleLowerCase().indexOf("sites");
+    listUrl = listUrl.substr(siteindex - 1) + "/Lists/";
 
     var that = this;
 
@@ -213,7 +194,8 @@ export default class Providers extends React.Component<
         that.contributePermission = res.Id;
       });
 
-    sp.web.getList(listUrl + "DocumentType")
+    sp.web
+      .getList(listUrl + "DocumentType")
       .items.select("Title", "TemplateType")
       .get()
       .then((res) => {
@@ -314,7 +296,8 @@ export default class Providers extends React.Component<
 
   loadTableData() {
     var that = this;
-    sp.web.getList(listUrl + "ProviderDetails")
+    sp.web
+      .getList(listUrl + "ProviderDetails")
       .items.orderBy("Id", false)
       .select(
         "Title",
@@ -375,8 +358,8 @@ export default class Providers extends React.Component<
     this.setState({
       items: text
         ? this.state.allItems.filter(
-          (i) => i.Title.toLowerCase().indexOf(text) > -1
-        )
+            (i) => i.Title.toLowerCase().indexOf(text) > -1
+          )
         : this.state.allItems,
     });
   };
@@ -455,38 +438,40 @@ export default class Providers extends React.Component<
     for (let index = 0; index < this.state.AllUsers.length; index++) {
       const user = this.state.AllUsers[index];
       if (!user) {
-        alertify.error(user + ' is not a valid user');
+        alertify.error(user + " is not a valid user");
         return;
       }
     }
 
     this.checkInvitation(0, true);
-
   };
 
-  checkInvitation = (index, valid) => {
+  checkInvitation = async (index, valid) => {
     var email = this.state.AllUsers[index];
-    this.props.graphClient
-      .api("/users?$filter=externalUserState eq 'Accepted' and mail eq '" + email + "'")
-      .get()
-      .then((content: any) => {
-        if (content.value.length == 0) {
+    var userExists;
+    await sp.web.siteGroups
+      .getByName(this.visitorsGroupName)
+      .users.get()
+      .then((results) => {
+        userExists = results.filter((result) => {
+          return result.Email == email;
+        });
+        if (userExists.length == 0) {
           valid = false;
         }
-        if (!valid) {
-          alertify.error(email + '-pending accepetance');
-          return;
-        }
-        index = index + 1;
-        if (index < this.state.AllUsers.length) {
-          this.checkInvitation(index, valid);
-        } else {
-          this.otherProcess();
-        }
-      })
-      .catch(err => {
       });
-  }
+
+    if (!valid) {
+      alertify.error(email + " is not part of BBHC yet"); // Alertify size fix
+      return;
+    }
+    index = index + 1;
+    if (index < this.state.AllUsers.length) {
+      this.checkInvitation(index, valid);
+    } else {
+      this.otherProcess();
+    }
+  };
 
   otherProcess = () => {
     var newlyAdded = [];
@@ -510,12 +495,11 @@ export default class Providers extends React.Component<
         }
         this.mainProcess();
       }
-
     } else {
       this.sendMailToUsers(this.state.AllUsers);
       this.mainProcess();
     }
-  }
+  };
 
   sendMailToUsers = (to) => {
     var that = this;
@@ -529,10 +513,9 @@ export default class Providers extends React.Component<
       },
     };
     sp.utility.sendEmail(emailProps);
-  }
+  };
 
   mainProcess = () => {
-
     var formData = this.state.formData;
     var that = this;
     that.userDetails = [];
@@ -558,7 +541,6 @@ export default class Providers extends React.Component<
       }
     }
 
-
     if (this.state.editUsers) {
       var existingUsers = this.state.editUsers.split(";");
       var newUsers = this.state.formData.Users.split(";");
@@ -583,11 +565,10 @@ export default class Providers extends React.Component<
         }
       }
 
-
       var providerData = {
         Title: formData.Title,
         ContractId: formData.ContractId,
-        Users: ''
+        Users: "",
       };
 
       for (let j = 0; j < existingUsers.length; j++) {
@@ -595,7 +576,7 @@ export default class Providers extends React.Component<
           var removeuser = newUsers.filter((c) => c == existingUsers[j]);
           if (removeuser.length == 0) {
             this.deletedUsers.push(existingUsers[j]);
-            providerData.Users = providerData.Users + existingUsers[j] + ';';
+            providerData.Users = providerData.Users + existingUsers[j] + ";";
             that.setpermissionfornewuser(
               "TemplateLibrary/" + that.state.formData.TemplateType,
               existingUsers[j],
@@ -611,7 +592,7 @@ export default class Providers extends React.Component<
 
     this.setState({ formData: formData });
     this.addToList(currentYear, this.state.formData);
-  }
+  };
 
   setpermissionfornewuser(folderPath, user, addpermission) {
     var reacthandler = this;
@@ -805,7 +786,8 @@ export default class Providers extends React.Component<
         formData.Logs = formData.Logs + deletededUser;
       }
 
-      sp.web.getList(listUrl + "ProviderDetails")
+      sp.web
+        .getList(listUrl + "ProviderDetails")
         .items.getById(formData.Id)
         .update(formData)
         .then((res) => {
@@ -832,7 +814,8 @@ export default class Providers extends React.Component<
         "\nAdded by : " +
         this.props.currentContext.pageContext.user.displayName;
 
-      sp.web.getList(listUrl + "ProviderDetails")
+      sp.web
+        .getList(listUrl + "ProviderDetails")
         .items.add(formData)
         .then((res) => {
           that.createProvider(formData.Title, year, formData);
@@ -911,7 +894,9 @@ export default class Providers extends React.Component<
                 resdata["ListItemAllFields"].RoleAssignments;
               for (let i = 0; i < roleAssignments.length; i++) {
                 const role = roleAssignments[i];
-                if (role.Member.LoginName != 'BBHC Provider SharePoint Viewers') {
+                if (
+                  role.Member.LoginName != "BBHC Provider SharePoint Viewers"
+                ) {
                   for (let j = 0; j < role.RoleDefinitionBindings.length; j++) {
                     const definition = role.RoleDefinitionBindings[j];
                     var bbhcpostUrl =
@@ -927,7 +912,7 @@ export default class Providers extends React.Component<
                       ")";
                     spHttpClient
                       .post(bbhcpostUrl, SPHttpClient.configurations.v1, spOpts)
-                      .then((response: SPHttpClientResponse) => { });
+                      .then((response: SPHttpClientResponse) => {});
                   }
                 }
               }
@@ -947,7 +932,7 @@ export default class Providers extends React.Component<
               ")";
             spHttpClient
               .post(postUrl, SPHttpClient.configurations.v1, spOpts)
-              .then((response: SPHttpClientResponse) => { });
+              .then((response: SPHttpClientResponse) => {});
           }
         }
       });
@@ -1076,7 +1061,9 @@ export default class Providers extends React.Component<
                 resdata["ListItemAllFields"].RoleAssignments;
               for (let i = 0; i < roleAssignments.length; i++) {
                 const role = roleAssignments[i];
-                if (role.Member.LoginName != 'BBHC Provider SharePoint Viewers') {
+                if (
+                  role.Member.LoginName != "BBHC Provider SharePoint Viewers"
+                ) {
                   for (let j = 0; j < role.RoleDefinitionBindings.length; j++) {
                     const definition = role.RoleDefinitionBindings[j];
                     var bbhcpostUrl =
@@ -1092,7 +1079,7 @@ export default class Providers extends React.Component<
                       ")";
                     spHttpClient
                       .post(bbhcpostUrl, SPHttpClient.configurations.v1, spOpts)
-                      .then((response: SPHttpClientResponse) => { });
+                      .then((response: SPHttpClientResponse) => {});
                   }
                 }
               }
@@ -1112,7 +1099,7 @@ export default class Providers extends React.Component<
               ")";
             spHttpClient
               .post(postUrl, SPHttpClient.configurations.v1, spOpts)
-              .then((response: SPHttpClientResponse) => { });
+              .then((response: SPHttpClientResponse) => {});
           }
 
           reacthandler.setpermissionsforfolders(
@@ -1215,7 +1202,6 @@ export default class Providers extends React.Component<
   }
 
   updateDeleteTag(index, items) {
-
     this.removeProviderFolderPermission(items);
 
     var that = this;
@@ -1227,7 +1213,8 @@ export default class Providers extends React.Component<
       new Date() +
       "\nDeleted by : " +
       that.props.currentContext.pageContext.user.displayName;
-    sp.web.getList(listUrl + "ProviderDetails")
+    sp.web
+      .getList(listUrl + "ProviderDetails")
       .items.getById(formData.Id)
       .update(formData)
       .then((res) => {
@@ -1263,7 +1250,7 @@ export default class Providers extends React.Component<
 
   removerMainFolderUserPermission(provider) {
     var reacthandler = this;
-    var users = provider.Users.split(';');
+    var users = provider.Users.split(";");
     for (let j = 0; j < users.length; j++) {
       const user = users[j];
       if (user) {
@@ -1271,7 +1258,6 @@ export default class Providers extends React.Component<
           .getByEmail(user)
           .get()
           .then(function (userdata) {
-
             var contract = provider.ContractId.substr(
               provider.ContractId.length - 2,
               2
@@ -1284,7 +1270,8 @@ export default class Providers extends React.Component<
               "-" +
               (currentyearprefix + nextyear);
 
-            var providerFolder = reacthandler.rootFolder + "/" + yearfolder + '/' + provider.Title;
+            var providerFolder =
+              reacthandler.rootFolder + "/" + yearfolder + "/" + provider.Title;
 
             var postUrl =
               reacthandler.props.currentContext.pageContext.web.absoluteUrl +
@@ -1298,7 +1285,8 @@ export default class Providers extends React.Component<
               reacthandler.readPermission +
               ")";
 
-            const spHttpClient: SPHttpClient = reacthandler.props.currentContext.spHttpClient;
+            const spHttpClient: SPHttpClient =
+              reacthandler.props.currentContext.spHttpClient;
             const spOpts: ISPHttpClientOptions = {};
 
             spHttpClient
@@ -1307,7 +1295,6 @@ export default class Providers extends React.Component<
                 if (response.ok) {
                 }
               });
-
           });
       }
     }
@@ -1661,8 +1648,8 @@ export default class Providers extends React.Component<
                 ></TextField>
               </div>
             ) : (
-                ""
-              )}
+              ""
+            )}
 
             {this.state.AllUsers.map((user, index) => {
               if (this.state.AllUsers.length == 1) {
